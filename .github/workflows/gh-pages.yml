@@ -93,8 +93,12 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+      
+      # 👇 核心修改在这里：加了 touch dist/.nojekyll
       - name: Build
-        run: PATH_PREFIX=/${{ github.event.repository.name }} pnpm build
+        run: |
+          PATH_PREFIX=/${{ github.event.repository.name }} pnpm build
+          touch dist/.nojekyll
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
