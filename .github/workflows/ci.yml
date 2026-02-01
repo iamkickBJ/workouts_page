@@ -6,6 +6,7 @@ jobs:
   lint_and_test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false  # <--- 新增：防止一个版本挂了导致其他版本被取消
       max-parallel: 4
       matrix:
         python-version: ['3.8', '3.9', '3.10']
@@ -25,4 +26,5 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Check formatting (black)
+        # 建议：如果不想因为格式问题报错，可以暂时注释掉下面这行，或者在本地先修复格式
         run: black . --check
