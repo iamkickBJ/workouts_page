@@ -1,6 +1,8 @@
 // const
+// ⚠️ 记得把下面这个 Token 换成你自己申请的 Mapbox Token，否则地图可能不显示红线
 const MAPBOX_TOKEN =
-    'pk.eyJ1IjoiYmVuLTI5IiwiYSI6ImNrZ3Q4Ym9mMDBqMGYyeXFvODV2dWl6YzQifQ.gSKoWF-fMjhzU67TuDezJQ';
+  'pk.eyJ1IjoiYmVuLTI5IiwiYSI6ImNrZ3Q4Ym9mMDBqMGYyeXFvODV2dWl6YzQifQ.gSKoWF-fMjhzU67TuDezJQ';
+
 const MUNICIPALITY_CITIES_ARR = [
   '北京市',
   '上海市',
@@ -9,6 +11,7 @@ const MUNICIPALITY_CITIES_ARR = [
   '香港特别行政区',
   '澳门特别行政区',
 ];
+
 const MAP_LAYER_LIST = [
   'road-label',
   'waterway-label',
@@ -37,10 +40,10 @@ const ROAD_LABEL_DISPLAY = true;
 const IS_CHINESE = true;
 const USE_ANIMATION_FOR_GRID = false;
 const CHINESE_INFO_MESSAGE = (yearLength: number, year: string): string =>
-  `户外运动 ${yearLength} 年 ` + ( year === 'Total' ? '' : `，地图展示的是 ${year} 年的轨迹`);
+  `户外运动 ${yearLength} 年 ` + (year === 'Total' ? '' : `，地图展示的是 ${year} 年的轨迹`);
 
 const ENGLISH_INFO_MESSAGE = (yearLength: number, year: string): string =>
-  `Logged ${yearLength} Years of Outdoor Journey` +  ( year === 'Total' ? '' : `, the map show routes in ${year}`);
+  `Logged ${yearLength} Years of Outdoor Journey` + (year === 'Total' ? '' : `, the map show routes in ${year}`);
 
 // not support English for now
 const CHINESE_LOCATION_INFO_MESSAGE_FIRST =
@@ -48,6 +51,8 @@ const CHINESE_LOCATION_INFO_MESSAGE_FIRST =
 const CHINESE_LOCATION_INFO_MESSAGE_SECOND = '不要停下来，不要停下探索的脚步';
 
 const INFO_MESSAGE = IS_CHINESE ? CHINESE_INFO_MESSAGE : ENGLISH_INFO_MESSAGE;
+
+// 定义各种运动的标题
 const FULL_MARATHON_RUN_TITLE = IS_CHINESE ? '全程马拉松' : 'Full Marathon';
 const HALF_MARATHON_RUN_TITLE = IS_CHINESE ? '半程马拉松' : 'Half Marathon';
 const RUN_TITLE = IS_CHINESE ? '跑步' : 'Run';
@@ -70,7 +75,6 @@ const RUN_TITLES = {
   HALF_MARATHON_RUN_TITLE,
   RUN_TITLE,
   TRAIL_RUN_TITLE,
-
   RIDE_TITLE,
   INDOOR_RIDE_TITLE,
   VIRTUAL_RIDE_TITLE,
@@ -84,6 +88,52 @@ const RUN_TITLES = {
   SKI_TITLE,
 };
 
+// ⚠️ 核心修改：这里添加了映射关系，网页才会显示对应的 Tab
+const TYPE_TRANSLATE = {
+  Run: RUN_TITLE,
+  Ride: RIDE_TITLE,
+  VirtualRide: VIRTUAL_RIDE_TITLE, // 👈 这一行让虚拟骑行单独显示
+  Hike: HIKE_TITLE,
+  Swim: SWIM_TITLE,
+  Rowing: ROWING_TITLE,
+  Kayaking: KAYAKING_TITLE,
+  Snowboard: SNOWBOARD_TITLE,
+  Ski: SKI_TITLE,
+  RoadTrip: ROAD_TRIP_TITLE,
+  Flight: FLIGHT_TITLE,
+};
+
+const nike = 'rgb(224,237,94)';
+const yellow = 'rgb(224,237,94)';
+const green = 'rgb(0,237,94)';
+const pink = 'rgb(237,85,219)';
+const cyan = 'rgb(112,243,255)';
+const IKB = 'rgb(0,47,167)';
+const wpink = 'rgb(228,212,220)';
+const gold = 'rgb(242,190,69)';
+const purple = 'rgb(154,118,252)';
+const veryPeri = 'rgb(105,106,173)'; // 长春花蓝 (用于虚拟骑行)
+const red = 'rgb(255,0,0)'; // 大红色
+
+// If your map has an offset please change this line
+// issues #92 and #198
+export const NEED_FIX_MAP = false;
+export const MAIN_COLOR = green;
+export const RUN_COLOR = yellow;
+export const RIDE_COLOR = green;
+export const VIRTUAL_RIDE_COLOR = veryPeri; // 虚拟骑行将显示为紫蓝色
+export const HIKE_COLOR = pink;
+export const SWIM_COLOR = gold;
+export const ROWING_COLOR = cyan;
+export const ROAD_TRIP_COLOR = purple;
+export const FLIGHT_COLOR = wpink;
+export const PROVINCE_FILL_COLOR = '#47b8e0';
+export const COUNTRY_FILL_COLOR = wpink;
+export const KAYAKING_COLOR = red;
+export const SNOWBOARD_COLOR = wpink;
+export const TRAIL_RUN_COLOR = IKB;
+
+// 导出所有配置
 export {
   CHINESE_LOCATION_INFO_MESSAGE_FIRST,
   CHINESE_LOCATION_INFO_MESSAGE_SECOND,
@@ -98,34 +148,5 @@ export {
   USE_DASH_LINE,
   LINE_OPACITY,
   MAP_HEIGHT,
+  TYPE_TRANSLATE, // 👈 确保这里导出了
 };
-
-const nike = 'rgb(224,237,94)';
-const yellow = 'rgb(224,237,94)';
-const green = 'rgb(0,237,94)';
-const pink = 'rgb(237,85,219)';
-const cyan = 'rgb(112,243,255)';
-const IKB = 'rgb(0,47,167)';
-const wpink = 'rgb(228,212,220)';
-const gold = 'rgb(242,190,69)';
-const purple = 'rgb(154,118,252)';
-const veryPeri = 'rgb(105,106,173)';//长春花蓝
-const red = 'rgb(255,0,0)';//大红色
-
-// If your map has an offset please change this line
-// issues #92 and #198
-export const NEED_FIX_MAP = false;
-export const MAIN_COLOR = green;
-export const RUN_COLOR = yellow;
-export const RIDE_COLOR = green;
-export const VIRTUAL_RIDE_COLOR = veryPeri;
-export const HIKE_COLOR = pink;
-export const SWIM_COLOR = gold;
-export const ROWING_COLOR = cyan;
-export const ROAD_TRIP_COLOR = purple;
-export const FLIGHT_COLOR = wpink;
-export const PROVINCE_FILL_COLOR = '#47b8e0';
-export const COUNTRY_FILL_COLOR = wpink;
-export const KAYAKING_COLOR = red;
-export const SNOWBOARD_COLOR = wpink;
-export const TRAIL_RUN_COLOR = IKB;
