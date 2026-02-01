@@ -11,9 +11,9 @@ interface ISiteMetadataResult {
 }
 
 const data: ISiteMetadataResult = {
-  siteTitle: 'My Running Page', // 网站标题，您可以改成 "Kick Running" 之类的
+  siteTitle: 'kick‘s Running Page', // 网站标题，您可以改成 "Kick Running" 之类的
   siteUrl: 'https://iamkickbj.github.io/workouts_page/', // 您的 GitHub Pages 地址
-  logo: '/images/kick.jpg', // 👈 这里已经改成了您的新图片名
+  logo: '/workouts_page/images/kick.jpg', // 👈 这里已经改成了您的新图片名
   description: 'Personal site and blog',
   keywords: 'workouts, running, cycling, riding, roadtrip, hiking, swimming',
   navLinks: [
