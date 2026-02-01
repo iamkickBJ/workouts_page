@@ -11,19 +11,19 @@ interface ISiteMetadataResult {
 }
 
 const data: ISiteMetadataResult = {
-  siteTitle: 'Workouts Map',
-  siteUrl: 'https://ben29.xyz',
-  logo: 'https://avatars3.githubusercontent.com/u/6956444?s=460&u=97e1062227c4088db3c987146455245c6fa78441',
+  siteTitle: 'My Running Page', // 网站标题，您可以改成 "Kick Running" 之类的
+  siteUrl: 'https://iamkickbj.github.io/workouts_page/', // 您的 GitHub Pages 地址
+  logo: '/images/kick.jpg', // 👈 这里已经改成了您的新图片名
   description: 'Personal site and blog',
   keywords: 'workouts, running, cycling, riding, roadtrip, hiking, swimming',
   navLinks: [
     {
       name: 'Blog',
-      url: 'https://ben29.xyz',
+      url: 'https://iamkickbj.github.io/', // 博客链接，如果没博客可以填您的 GitHub 主页
     },
     {
       name: 'About',
-      url: 'https://github.com/ben-29/workouts_page/blob/master/README-CN.md',
+      url: 'https://github.com/iamkickbj', // 关于页面，链接到您的 GitHub
     },
   ],
 };
