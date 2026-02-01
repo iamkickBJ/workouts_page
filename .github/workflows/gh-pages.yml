@@ -6,6 +6,16 @@ on:
     branches:
       - master
       - main
+  # 👇👇👇 核心修复：加回了这一段，允许被 run_data_sync 调用 👇👇👇
+  workflow_call:
+    inputs:
+      save_data_in_github_cache:
+        required: false
+        type: boolean
+      data_cache_prefix:
+        required: false
+        type: string
+  # 👆👆👆 核心修复结束 👆👆👆
 
 permissions:
   contents: read
@@ -52,11 +62,29 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # 👇 核心修改在这里：加了 cp dist/index.html dist/404.html
+      - name: Restore Data Cache
+        if: inputs.save_data_in_github_cache == true
+        uses: actions/cache@v4
+        with:
+          path: |
+            activities
+            assets
+            GPX_OUT
+            TCX_OUT
+            FIT_OUT
+            Workouts
+            run_page/data.db
+            src/static/activities.json
+            imported.json
+          key: ${{ inputs.data_cache_prefix }}-${{ github.sha }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ inputs.data_cache_prefix }}-${{ github.sha }}-
+
       - name: Build
         run: |
           pnpm build
           touch dist/.nojekyll
+          # 👇 修复白屏的逻辑依然保留
           cp dist/index.html dist/404.html
 
       - name: Upload artifact
