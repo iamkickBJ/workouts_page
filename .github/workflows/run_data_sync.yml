@@ -140,7 +140,29 @@ jobs:
             exit 1
           fi
 
-          GARMIN_SECRET_RUNTIME=$(python run_page/get_garmin_secret.py '${{ secrets.GARMIN_EMAIL }}' '${{ secrets.GARMIN_PASSWORD }}')
+          secret_retry_ok=0
+          for attempt in 1 2 3; do
+            echo "Refreshing Garmin secret (attempt $attempt/3)..."
+            set +e
+            GARMIN_SECRET_RUNTIME=$(python run_page/get_garmin_secret.py '${{ secrets.GARMIN_EMAIL }}' '${{ secrets.GARMIN_PASSWORD }}' 2>garmin_secret_error.log)
+            secret_status=$?
+            set -e
+            if [ $secret_status -eq 0 ]; then
+              secret_retry_ok=1
+              break
+            fi
+            sleep $((attempt * 20))
+          done
+
+          if [ $secret_retry_ok -ne 1 ]; then
+            if grep -qi "429" garmin_secret_error.log; then
+              echo "Garmin login is rate-limited (HTTP 429). Skip this run and keep previous data."
+              exit 0
+            fi
+            cat garmin_secret_error.log
+            exit 1
+          fi
+
           echo "::add-mask::$GARMIN_SECRET_RUNTIME"
           echo "GARMIN_SECRET_RUNTIME=$GARMIN_SECRET_RUNTIME" >> "$GITHUB_ENV"
           python run_page/garmin_sync.py "$GARMIN_SECRET_RUNTIME"
@@ -178,7 +200,29 @@ jobs:
             exit 1
           fi
 
-          GARMIN_SECRET_CN_RUNTIME=$(python run_page/get_garmin_secret.py '${{ secrets.GARMIN_CN_EMAIL }}' '${{ secrets.GARMIN_CN_PASSWORD }}' --is-cn)
+          secret_retry_ok=0
+          for attempt in 1 2 3; do
+            echo "Refreshing Garmin CN secret (attempt $attempt/3)..."
+            set +e
+            GARMIN_SECRET_CN_RUNTIME=$(python run_page/get_garmin_secret.py '${{ secrets.GARMIN_CN_EMAIL }}' '${{ secrets.GARMIN_CN_PASSWORD }}' --is-cn 2>garmin_cn_secret_error.log)
+            secret_status=$?
+            set -e
+            if [ $secret_status -eq 0 ]; then
+              secret_retry_ok=1
+              break
+            fi
+            sleep $((attempt * 20))
+          done
+
+          if [ $secret_retry_ok -ne 1 ]; then
+            if grep -qi "429" garmin_cn_secret_error.log; then
+              echo "Garmin CN login is rate-limited (HTTP 429). Skip this run and keep previous data."
+              exit 0
+            fi
+            cat garmin_cn_secret_error.log
+            exit 1
+          fi
+
           echo "::add-mask::$GARMIN_SECRET_CN_RUNTIME"
           echo "GARMIN_SECRET_CN_RUNTIME=$GARMIN_SECRET_CN_RUNTIME" >> "$GITHUB_ENV"
           python run_page/garmin_sync.py "$GARMIN_SECRET_CN_RUNTIME" --is-cn
