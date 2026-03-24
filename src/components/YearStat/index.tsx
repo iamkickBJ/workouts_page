@@ -2,7 +2,16 @@ import React from 'react';
 import Stat from '@/components/Stat';
 import WorkoutStat from '@/components/WorkoutStat';
 import useActivities from '@/hooks/useActivities';
-import { formatPace, colorFromType } from '@/utils/utils';
+import {
+  AVG_HEART_RATE_LABEL,
+  FAILED_TO_LOAD_SVG_LABEL,
+  IS_CHINESE,
+  JOURNEY_LABEL,
+  LOADING_LABEL,
+  STREAK_LABEL,
+  TOTAL_LABEL,
+} from '@/utils/const';
+import { colorFromType, titleForType } from '@/utils/utils';
 import styles from './style.module.scss';
 import useHover from '@/hooks/useHover';
 import { yearStats } from '@assets/index'
@@ -16,7 +25,7 @@ const YearStat = ({ year, onClick }: { year: string, onClick: (_year: string) =>
     .then((res) => ({ default: res }))
     .catch((err) => {
       console.error(err);
-      return { default: () => <div>Failed to load SVG</div> };
+      return { default: () => <div>{FAILED_TO_LOAD_SVG_LABEL}</div> };
     })
   );
 
@@ -64,12 +73,12 @@ const YearStat = ({ year, onClick }: { year: string, onClick: (_year: string) =>
       {...eventHandlers}
     >
       <section>
-        <Stat value={year} description=" Journey" />
+        <Stat value={year === 'Total' ? TOTAL_LABEL : year} description={JOURNEY_LABEL} />
         { sumDistance > 0 &&
           <WorkoutStat
             key='total'
             value={runs.length}
-            description={" Total"}
+            description={` ${TOTAL_LABEL}`}
             distance={(sumDistance / 1000.0).toFixed(0)}
           />
         }
@@ -77,23 +86,22 @@ const YearStat = ({ year, onClick }: { year: string, onClick: (_year: string) =>
           <WorkoutStat
             key={type}
             value={count[0]}
-            description={` ${type}`+"s"}
-            // pace={formatPace(count[2] / count[1])}
+            description={` ${titleForType(type)}${IS_CHINESE ? '' : count[0] > 1 ? 's' : ''}`}
             distance={(count[2] / 1000.0).toFixed(0)}
-            // color={colorFromType(type)}
+            color={colorFromType(type)}
           />
         ))}
         <Stat
-          value={`${streak} day`}
-          description=" Streak"
+          value={IS_CHINESE ? streak : `${streak} day`}
+          description={STREAK_LABEL}
           className="mb0 pb0"
         />
         {hasHeartRate && (
-          <Stat value={avgHeartRate} description=" Avg Heart Rate" />
+          <Stat value={avgHeartRate} description={AVG_HEART_RATE_LABEL} />
         )}
       </section>
       {year !== "Total" && hovered && (
-        <React.Suspense fallback="loading...">
+        <React.Suspense fallback={LOADING_LABEL}>
           <YearSVG className={styles.yearSVG} />
         </React.Suspense>
       )}

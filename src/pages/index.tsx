@@ -8,7 +8,7 @@ import SVGStat from '@/components/SVGStat';
 import YearsStat from '@/components/YearsStat';
 import useActivities from '@/hooks/useActivities';
 import useSiteMetadata from '@/hooks/useSiteMetadata';
-import { IS_CHINESE } from '@/utils/const';
+import { CITY_LABEL, HEATMAP_LABEL, IS_CHINESE, TITLE_LABEL, TYPE_LABEL, YEAR_LABEL } from '@/utils/const';
 import {
   Activity,
   IViewState,
@@ -50,7 +50,7 @@ const Index = () => {
     scrollToMap();
     setActivity(filterAndSortRuns(activities, item, func, sortDateFunc));
     setRunIndex(-1);
-    setTitle(`${item} ${name} Heatmap`);
+    setTitle(`${item} ${name} ${HEATMAP_LABEL}`);
   };
 
   const changeYear = (y: string) => {
@@ -63,20 +63,20 @@ const Index = () => {
       });
     }
 
-    changeByItem(y, 'Year', filterYearRuns);
+    changeByItem(y, YEAR_LABEL, filterYearRuns);
     clearInterval(intervalId);
   };
 
   const changeCity = (city: string) => {
-    changeByItem(city, 'City', filterCityRuns);
+    changeByItem(city, CITY_LABEL, filterCityRuns);
   };
 
   const changeTitle = (title: string) => {
-    changeByItem(title, 'Title', filterTitleRuns);
+    changeByItem(title, TITLE_LABEL, filterTitleRuns);
   };
 
   const changeType = (type: string) => {
-    changeByItem(type, 'Type', filterTypeRuns, false);
+    changeByItem(type, TYPE_LABEL, filterTypeRuns, false);
   };
 
   const locateActivity = (runIds: [Number]) => {

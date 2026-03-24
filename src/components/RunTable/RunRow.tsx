@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatPace, colorFromType, formatRunTime, Activity } from '@/utils/utils';
+import { formatPace, colorFromType, formatRunTime, Activity, titleForType } from '@/utils/utils';
 import styles from './style.module.scss';
 
 interface IRunRowProperties {
@@ -30,7 +30,7 @@ const RunRow = ({ elementIndex, locateActivity, run, runIndex, setRunIndex }: IR
       style={{color: colorFromType(type)}}
     >
       <td>{run.name}</td>
-      <td>{type}</td>
+      <td>{titleForType(type)}</td>
       <td>{distance}</td>
       <td>{paceParts}</td>
       <td>{heartRate && heartRate.toFixed(0)}</td>

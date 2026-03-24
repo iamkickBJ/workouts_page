@@ -5,6 +5,13 @@ import {
   convertMovingTime2Sec,
   Activity,
 } from '@/utils/utils';
+import {
+  DATE_LABEL,
+  HEART_RATE_SHORT_LABEL,
+  PACE_LABEL,
+  TIME_LABEL,
+  TYPE_LABEL,
+} from '@/utils/const';
 import RunRow from './RunRow';
 import styles from './style.module.scss';
 
@@ -26,6 +33,14 @@ const RunTable = ({
   setRunIndex,
 }: IRunTableProperties) => {
   const [sortFuncInfo, setSortFuncInfo] = useState('');
+  const headerLabels: Record<string, string> = {
+    Type: TYPE_LABEL,
+    KM: 'KM',
+    Pace: PACE_LABEL,
+    BPM: HEART_RATE_SHORT_LABEL,
+    Time: TIME_LABEL,
+    Date: DATE_LABEL,
+  };
   // TODO refactor?
   const sortTypeFunc: SortFunc = (a, b) =>
     sortFuncInfo === 'Type' ? a.type > b.type ? 1:-1 : b.type < a.type ? -1:1;
@@ -59,8 +74,12 @@ const RunTable = ({
   ]);
 
   const handleClick: React.MouseEventHandler<HTMLElement> = (e) => {
-    const funcName = (e.target as HTMLElement).innerHTML;
+    const funcName = (e.target as HTMLElement).dataset.sortKey || '';
     const f = sortFuncMap.get(funcName);
+
+    if (!f) {
+      return;
+    }
 
     setRunIndex(-1);
     setSortFuncInfo(sortFuncInfo === funcName ? '' : funcName);
@@ -74,8 +93,8 @@ const RunTable = ({
           <tr>
             <th />
             {Array.from(sortFuncMap.keys()).map((k) => (
-              <th key={k} onClick={handleClick}>
-                {k}
+              <th key={k} onClick={handleClick} data-sort-key={k}>
+                {headerLabels[k] || k}
               </th>
             ))}
           </tr>

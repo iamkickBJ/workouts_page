@@ -4,8 +4,10 @@ import { WebMercatorViewport } from 'viewport-mercator-project';
 import { chinaGeojson } from '@/static/run_countries';
 import { chinaCities } from '@/static/city';
 import {
+  DISTANCE_UNIT_LABEL,
   MUNICIPALITY_CITIES_ARR,
   NEED_FIX_MAP,
+  NO_MAP_DATA_LABEL,
   RUN_TITLES,
   MAIN_COLOR,
   RIDE_COLOR,
@@ -46,8 +48,8 @@ const titleForShow = (run: Activity): string => {
   if (run.name) {
     name = run.name;
   }
-  return `${name} ${date} ${distance} KM ${
-    !run.summary_polyline ? '(No map data for this workout)' : ''
+  return `${name} ${date} ${distance}${DISTANCE_UNIT_LABEL} ${
+    !run.summary_polyline ? NO_MAP_DATA_LABEL : ''
   }`;
 };
 

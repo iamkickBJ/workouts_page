@@ -3,6 +3,7 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import Header from '@/components/Header';
 import useSiteMetadata from '@/hooks/useSiteMetadata';
+import { IS_CHINESE } from '@/utils/const';
 import styles from './style.module.scss';
 
 const Layout = ({ children }: React.PropsWithChildren) => {
@@ -11,7 +12,7 @@ const Layout = ({ children }: React.PropsWithChildren) => {
   return (
     <>
       <Helmet bodyAttributes={{ class: styles.body }}>
-        <html lang="en" />
+        <html lang={IS_CHINESE ? 'zh-CN' : 'en'} />
         <title>{siteTitle}</title>
         <meta name="description" content={description} />
         <meta name="keywords" content={keywords} />

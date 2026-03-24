@@ -1,7 +1,6 @@
 // const
-// ⚠️ 记得把下面这个 Token 换成你自己申请的 Mapbox Token，否则地图可能不显示红线
-const MAPBOX_TOKEN =
-  'pk.eyJ1IjoiYmVuLTI5IiwiYSI6ImNrZ3Q4Ym9mMDBqMGYyeXFvODV2dWl6YzQifQ.gSKoWF-fMjhzU67TuDezJQ';
+// 建议通过 VITE_MAPBOX_TOKEN 注入，避免把 token 提交到仓库里
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 const MUNICIPALITY_CITIES_ARR = [
   '北京市',
@@ -51,6 +50,23 @@ const CHINESE_LOCATION_INFO_MESSAGE_FIRST =
 const CHINESE_LOCATION_INFO_MESSAGE_SECOND = '不要停下来，不要停下探索的脚步';
 
 const INFO_MESSAGE = IS_CHINESE ? CHINESE_INFO_MESSAGE : ENGLISH_INFO_MESSAGE;
+const TOTAL_LABEL = IS_CHINESE ? '总计' : 'Total';
+const JOURNEY_LABEL = IS_CHINESE ? ' 运动旅程' : ' Journey';
+const STREAK_LABEL = IS_CHINESE ? ' 连续天数' : ' Streak';
+const AVG_HEART_RATE_LABEL = IS_CHINESE ? ' 平均心率' : ' Avg Heart Rate';
+const HEATMAP_LABEL = IS_CHINESE ? '热力图' : 'Heatmap';
+const YEAR_LABEL = IS_CHINESE ? '年份' : 'Year';
+const CITY_LABEL = IS_CHINESE ? '城市' : 'City';
+const TITLE_LABEL = IS_CHINESE ? '标题' : 'Title';
+const TYPE_LABEL = IS_CHINESE ? '类型' : 'Type';
+const PACE_LABEL = IS_CHINESE ? '配速' : 'Pace';
+const TIME_LABEL = IS_CHINESE ? '时长' : 'Time';
+const DATE_LABEL = IS_CHINESE ? '日期' : 'Date';
+const HEART_RATE_SHORT_LABEL = IS_CHINESE ? '心率' : 'BPM';
+const DISTANCE_UNIT_LABEL = ' KM';
+const FAILED_TO_LOAD_SVG_LABEL = IS_CHINESE ? 'SVG 加载失败' : 'Failed to load SVG';
+const LOADING_LABEL = IS_CHINESE ? '加载中...' : 'loading...';
+const NO_MAP_DATA_LABEL = IS_CHINESE ? '(这条运动没有地图轨迹)' : '(No map data for this workout)';
 
 // 定义各种运动的标题
 const FULL_MARATHON_RUN_TITLE = IS_CHINESE ? '全程马拉松' : 'Full Marathon';
@@ -135,13 +151,30 @@ export const TRAIL_RUN_COLOR = IKB;
 
 // 导出所有配置
 export {
+  AVG_HEART_RATE_LABEL,
   CHINESE_LOCATION_INFO_MESSAGE_FIRST,
   CHINESE_LOCATION_INFO_MESSAGE_SECOND,
+  CITY_LABEL,
+  DATE_LABEL,
+  DISTANCE_UNIT_LABEL,
+  FAILED_TO_LOAD_SVG_LABEL,
+  HEART_RATE_SHORT_LABEL,
+  HEATMAP_LABEL,
   MAPBOX_TOKEN,
   MUNICIPALITY_CITIES_ARR,
   MAP_LAYER_LIST,
   IS_CHINESE,
+  JOURNEY_LABEL,
+  LOADING_LABEL,
+  NO_MAP_DATA_LABEL,
+  PACE_LABEL,
   ROAD_LABEL_DISPLAY,
+  STREAK_LABEL,
+  TIME_LABEL,
+  TITLE_LABEL,
+  TOTAL_LABEL,
+  TYPE_LABEL,
+  YEAR_LABEL,
   INFO_MESSAGE,
   RUN_TITLES,
   USE_ANIMATION_FOR_GRID,

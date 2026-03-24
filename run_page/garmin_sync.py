@@ -190,6 +190,25 @@ class GarminConnectAuthenticationError(Exception):
         self.status = status
 
 
+def build_garmin_client(secret_string, auth_domain, is_only_running=False):
+    if secret_string is None or not str(secret_string).strip():
+        raise GarminConnectAuthenticationError(
+            "GARMIN_SECRET_STRING is missing. "
+            "Set GARMIN_SECRET_STRING or generate a new one with "
+            "run_page/get_garmin_secret.py."
+        )
+
+    try:
+        return Garmin(secret_string, auth_domain, is_only_running)
+    except Exception as err:
+        raise GarminConnectAuthenticationError(
+            "Unable to authenticate with Garmin using the provided secret string. "
+            "The secret may be expired, revoked, or malformed. "
+            "Generate a new secret with run_page/get_garmin_secret.py and update "
+            "GARMIN_SECRET_STRING."
+        ) from err
+
+
 async def download_garmin_data(client, activity_id, file_type="gpx"):
     folder = FOLDER_DICT.get(file_type, "gpx")
     try:
@@ -251,7 +270,7 @@ def get_downloaded_ids(folder):
 async def download_new_activities(
     secret_string, auth_domain, downloaded_ids, is_only_running, folder, file_type
 ):
-    client = Garmin(secret_string, auth_domain, is_only_running)
+    client = build_garmin_client(secret_string, auth_domain, is_only_running)
     # because I don't find a para for after time, so I use garmin-id as filename
     # to find new run to generage
     activity_ids = await get_activity_id_list(client)
@@ -321,16 +340,20 @@ if __name__ == "__main__":
         os.mkdir(folder)
     downloaded_ids = get_downloaded_ids(folder)
 
-    loop = asyncio.get_event_loop()
-    future = asyncio.ensure_future(
-        download_new_activities(
-            secret_string,
-            auth_domain,
-            downloaded_ids,
-            is_only_running,
-            folder,
-            file_type,
+    try:
+        loop = asyncio.get_event_loop()
+        future = asyncio.ensure_future(
+            download_new_activities(
+                secret_string,
+                auth_domain,
+                downloaded_ids,
+                is_only_running,
+                folder,
+                file_type,
+            )
         )
-    )
-    loop.run_until_complete(future)
-    make_activities_file_only(SQL_FILE, folder, JSON_FILE, file_suffix=file_type)
+        loop.run_until_complete(future)
+        make_activities_file_only(SQL_FILE, folder, JSON_FILE, file_suffix=file_type)
+    except GarminConnectAuthenticationError as err:
+        print(str(err))
+        sys.exit(1)
