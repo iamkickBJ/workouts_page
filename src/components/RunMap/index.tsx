@@ -8,6 +8,7 @@ import {
   ROAD_LABEL_DISPLAY,
   MAIN_COLOR,
   MAPBOX_TOKEN,
+  MAP_TOKEN_MISSING_LABEL,
   PROVINCE_FILL_COLOR,
   COUNTRY_FILL_COLOR,
   USE_DASH_LINE,
@@ -98,6 +99,16 @@ const RunMap = ({
     right: '10px',
     opacity: 0.3,
   };
+
+  if (!MAPBOX_TOKEN) {
+    return (
+      <div style={style} className={styles.mapFallback}>
+        <RunMapButtons changeYear={changeYear} thisYear={thisYear} />
+        <span className={styles.runTitle}>{title}</span>
+        <div className={styles.mapFallbackText}>{MAP_TOKEN_MISSING_LABEL}</div>
+      </div>
+    );
+  }
 
   return (
     <Map

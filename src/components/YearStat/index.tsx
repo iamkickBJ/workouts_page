@@ -36,16 +36,24 @@ const YearStat = ({ year, onClick }: { year: string, onClick: (_year: string) =>
   let streak = 0;
   let heartRate = 0;
   let heartRateNullCount = 0;
-  const workoutsCounts = {};
+  const workoutsCounts: Record<string, [number, number, number]> = {
+    Ride: [0, 0, 0],
+    VirtualRide: [0, 0, 0],
+    'Indoor Ride': [0, 0, 0],
+  };
 
   runs.forEach((run) => {
     sumDistance += run.distance || 0;
     if (run.average_speed) {
-      if(workoutsCounts[run.type]){
-        var [oriCount, oriSecondsAvail, oriMetersAvail] = workoutsCounts[run.type]
-        workoutsCounts[run.type] = [oriCount + 1, oriSecondsAvail + (run.distance || 0) / run.average_speed, oriMetersAvail + (run.distance || 0)]
-      }else{
-        workoutsCounts[run.type] = [1, (run.distance || 0) / run.average_speed, run.distance]
+      if (workoutsCounts[run.type]) {
+        const [oriCount, oriSecondsAvail, oriMetersAvail] = workoutsCounts[run.type];
+        workoutsCounts[run.type] = [
+          oriCount + 1,
+          oriSecondsAvail + (run.distance || 0) / run.average_speed,
+          oriMetersAvail + (run.distance || 0),
+        ];
+      } else {
+        workoutsCounts[run.type] = [1, (run.distance || 0) / run.average_speed, run.distance];
       }
     }
     if (run.average_heartrate) {
@@ -62,10 +70,17 @@ const YearStat = ({ year, onClick }: { year: string, onClick: (_year: string) =>
     0
   );
 
-  const workoutsArr = Object.entries(workoutsCounts);
-  workoutsArr.sort((a, b) => {
-    return b[1][0] - a[1][0]
-  });
+  const bikeTypes = ['Ride', 'VirtualRide', 'Indoor Ride'];
+  const bikeTypeSet = new Set(bikeTypes);
+  const bikeWorkouts = bikeTypes
+    .filter((type) => workoutsCounts[type] !== undefined)
+    .map((type) => [type, workoutsCounts[type]] as [string, [number, number, number]]);
+
+  const otherWorkouts = Object.entries(workoutsCounts)
+    .filter(([type, count]) => !bikeTypeSet.has(type) && count[0] > 0)
+    .sort((a, b) => b[1][0] - a[1][0]);
+
+  const workoutsArr = [...bikeWorkouts, ...otherWorkouts];
   return (
     <div
       style={{ cursor: 'pointer' }}

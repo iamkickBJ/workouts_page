@@ -67,6 +67,9 @@ const DISTANCE_UNIT_LABEL = ' KM';
 const FAILED_TO_LOAD_SVG_LABEL = IS_CHINESE ? 'SVG 加载失败' : 'Failed to load SVG';
 const LOADING_LABEL = IS_CHINESE ? '加载中...' : 'loading...';
 const NO_MAP_DATA_LABEL = IS_CHINESE ? '(这条运动没有地图轨迹)' : '(No map data for this workout)';
+const MAP_TOKEN_MISSING_LABEL = IS_CHINESE
+  ? '地图未显示：请在 GitHub 仓库 Secrets 中配置 MAPBOX_TOKEN（或 VITE_MAPBOX_TOKEN）'
+  : 'Map hidden: set MAPBOX_TOKEN (or VITE_MAPBOX_TOKEN) in GitHub Secrets.';
 
 // 定义各种运动的标题
 const FULL_MARATHON_RUN_TITLE = IS_CHINESE ? '全程马拉松' : 'Full Marathon';
@@ -167,6 +170,7 @@ export {
   JOURNEY_LABEL,
   LOADING_LABEL,
   NO_MAP_DATA_LABEL,
+  MAP_TOKEN_MISSING_LABEL,
   PACE_LABEL,
   ROAD_LABEL_DISPLAY,
   STREAK_LABEL,

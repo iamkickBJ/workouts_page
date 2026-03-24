@@ -41,3 +41,19 @@
   font-family: $global-font-family;
   cursor: pointer;
 }
+
+.mapFallback {
+  position: relative;
+  background: #111;
+  border: 1px solid #333;
+}
+
+.mapFallbackText {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  top: 60px;
+  color: #e6e6e6;
+  font-size: 14px;
+  line-height: 1.6;
+}
