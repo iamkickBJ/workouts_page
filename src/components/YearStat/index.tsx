@@ -73,7 +73,7 @@ const YearStat = ({ year, onClick }: { year: string, onClick: (_year: string) =>
   const bikeTypes = ['Ride', 'VirtualRide', 'Indoor Ride'];
   const bikeTypeSet = new Set(bikeTypes);
   const bikeWorkouts = bikeTypes
-    .filter((type) => workoutsCounts[type] !== undefined)
+    .filter((type) => workoutsCounts[type] !== undefined && workoutsCounts[type][0] > 0)
     .map((type) => [type, workoutsCounts[type]] as [string, [number, number, number]]);
 
   const otherWorkouts = Object.entries(workoutsCounts)
