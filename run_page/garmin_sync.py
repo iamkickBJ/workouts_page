@@ -5,6 +5,7 @@ Copy most code from https://github.com/cyberjunky/python-garminconnect
 
 import argparse
 import asyncio
+import json
 import logging
 import os
 import sys
@@ -17,7 +18,7 @@ import aiofiles
 import cloudscraper
 import garth
 import httpx
-from config import FOLDER_DICT, JSON_FILE, SQL_FILE, config
+from config import FOLDER_DICT, GARMIN_META_FILE, JSON_FILE, SQL_FILE, config
 from garmin_device_adaptor import wrap_device_info
 from utils import make_activities_file_only
 
@@ -43,9 +44,8 @@ GARMIN_CN_URL_DICT = {
     "ACTIVITY_URL": "https://connectapi.garmin.cn/activity-service/activity/{activity_id}",
 }
 
-# set to True if you want to sync all time activities
-# default only sync last 20
-GET_ALL = False
+# set to True if you want to sync all-time activities
+GET_ALL = True
 
 
 class Garmin:
@@ -235,22 +235,68 @@ async def download_garmin_data(client, activity_id, file_type="gpx"):
 
 
 async def get_activity_id_list(client, start=0):
+    limit = 100 if GET_ALL else 20
+    activities = await client.get_activities(start, limit)
+    if not activities:
+        return []
+
+    ids = [str(a.get("activityId", "")) for a in activities if a.get("activityId")]
+    print("Syncing Activity IDs")
     if GET_ALL:
-        activities = await client.get_activities(start, 100)
-        if len(activities) > 0:
-            ids = list(map(lambda a: str(a.get("activityId", "")), activities))
-            print("Syncing Activity IDs")
-            return ids + await get_activity_id_list(client, start + 100)
-        else:
-            return []
-    else:
-        activities = await client.get_activities(start, 20)
-        if len(activities) > 0:
-            ids = list(map(lambda a: str(a.get("activityId", "")), activities))
-            print(f"Syncing Activity IDs")
-            return ids
-        else:
-            return []
+        return ids + await get_activity_id_list(client, start + limit)
+    return ids
+
+
+def _extract_activity_meta(activity):
+    activity_id = str(activity.get("activityId", "")).strip()
+    if not activity_id:
+        return None, None
+    activity_type = activity.get("activityType", {}) or {}
+    return activity_id, {
+        "distance": activity.get("distance"),
+        "movingDuration": activity.get("movingDuration"),
+        "duration": activity.get("duration"),
+        "elapsedDuration": activity.get("elapsedDuration"),
+        "name": activity.get("activityName"),
+        "type": activity_type.get("typeKey"),
+        "startTimeLocal": activity.get("startTimeLocal"),
+        "startTimeGMT": activity.get("startTimeGMT"),
+    }
+
+
+async def get_activity_meta_map(client, start=0):
+    limit = 100 if GET_ALL else 20
+    activities = await client.get_activities(start, limit)
+    if not activities:
+        return {}
+
+    meta_map = {}
+    for activity in activities:
+        activity_id, meta = _extract_activity_meta(activity)
+        if activity_id:
+            meta_map[activity_id] = meta
+
+    if GET_ALL:
+        meta_map.update(await get_activity_meta_map(client, start + limit))
+    return meta_map
+
+
+def save_activity_meta_map(meta_map):
+    if not meta_map:
+        return
+    old_meta = {}
+    if os.path.exists(GARMIN_META_FILE):
+        try:
+            with open(GARMIN_META_FILE, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+                if isinstance(loaded, dict):
+                    old_meta = loaded
+        except Exception:
+            pass
+
+    old_meta.update(meta_map)
+    with open(GARMIN_META_FILE, "w", encoding="utf-8") as f:
+        json.dump(old_meta, f, ensure_ascii=False)
 
 
 async def gather_with_concurrency(n, tasks):
@@ -271,10 +317,12 @@ async def download_new_activities(
     secret_string, auth_domain, downloaded_ids, is_only_running, folder, file_type
 ):
     client = build_garmin_client(secret_string, auth_domain, is_only_running)
+    activity_meta_map = await get_activity_meta_map(client)
+    save_activity_meta_map(activity_meta_map)
     # because I don't find a para for after time, so I use garmin-id as filename
     # to find new run to generage
-    activity_ids = await get_activity_id_list(client)
-    to_generate_garmin_ids = list(set(activity_ids) - set(downloaded_ids))
+    activity_ids = list(activity_meta_map.keys()) or await get_activity_id_list(client)
+    to_generate_garmin_ids = sorted(list(set(activity_ids) - set(downloaded_ids)))
     print(f"{len(to_generate_garmin_ids)} new activities to be downloaded")
 
     start_time = time.time()

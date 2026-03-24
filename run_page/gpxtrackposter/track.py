@@ -5,6 +5,7 @@
 # license that can be found in the LICENSE file.
 
 import datetime
+import json
 import os
 from collections import namedtuple
 
@@ -23,6 +24,7 @@ from fit_tool.profile.profile_type import Sport
 from polyline_processor import filter_out
 from rich import print
 from tcxreader.tcxreader import TCXReader
+from config import GARMIN_META_FILE
 
 from .exceptions import TrackLoadError
 from .utils import parse_datetime_to_local
@@ -31,6 +33,23 @@ start_point = namedtuple("start_point", "lat lon")
 run_map = namedtuple("polyline", "summary_polyline")
 
 IGNORE_BEFORE_SAVING = os.getenv("IGNORE_BEFORE_SAVING", False)
+_GARMIN_META_CACHE = None
+
+
+def _load_garmin_meta_cache():
+    global _GARMIN_META_CACHE
+    if _GARMIN_META_CACHE is not None:
+        return _GARMIN_META_CACHE
+    if not os.path.exists(GARMIN_META_FILE):
+        _GARMIN_META_CACHE = {}
+        return _GARMIN_META_CACHE
+    try:
+        with open(GARMIN_META_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            _GARMIN_META_CACHE = data if isinstance(data, dict) else {}
+    except Exception:
+        _GARMIN_META_CACHE = {}
+    return _GARMIN_META_CACHE
 
 
 class Track:
@@ -241,6 +260,33 @@ class Track:
             sum(heart_rate_list) / len(heart_rate_list) if heart_rate_list else None
         )
         self.moving_dict = self._get_moving_data(gpx, self.length)
+        self._override_with_garmin_meta()
+
+    def _override_with_garmin_meta(self):
+        # Garmin downloads use activityId as filename, e.g. 1234567890.gpx
+        file_name = self.file_names[0] if self.file_names else ""
+        activity_id, _ = os.path.splitext(file_name)
+        if not activity_id:
+            return
+        garmin_meta = _load_garmin_meta_cache().get(activity_id)
+        if not garmin_meta:
+            return
+
+        official_distance = garmin_meta.get("distance")
+        if official_distance and official_distance > 0:
+            self.length = float(official_distance)
+            self.moving_dict["distance"] = float(official_distance)
+            moving_seconds = self.moving_dict.get("moving_time", datetime.timedelta()).total_seconds()
+            if moving_seconds:
+                self.moving_dict["average_speed"] = float(official_distance) / moving_seconds
+
+        activity_name = garmin_meta.get("name")
+        if activity_name:
+            self.name = activity_name
+
+        activity_type = garmin_meta.get("type")
+        if activity_type:
+            self.type = activity_type
 
     def _load_fit_data(self, fit: FitFile):
         _polylines = []
@@ -322,9 +368,9 @@ class Track:
     @staticmethod
     def _get_moving_data(gpx, total_distance):
         moving_data = gpx.get_moving_data()
-        # Prefer total 2D track length for persisted activity distance so it
-        # matches platform totals more closely; keep moving_time for pace metrics.
-        distance = total_distance if total_distance else moving_data.moving_distance
+        # Default to moving distance for GPX parsing; Garmin activities will be
+        # overridden by official distance via activity metadata.
+        distance = moving_data.moving_distance if moving_data.moving_distance else total_distance
         return {
             "distance": distance,
             "moving_time": datetime.timedelta(seconds=moving_data.moving_time),

@@ -19,6 +19,7 @@ FOLDER_DICT = {
 SQL_FILE = os.path.join(parent, "run_page", "data.db")
 JSON_FILE = os.path.join(parent, "src", "static", "activities.json")
 SYNCED_FILE = os.path.join(parent, "imported.json")
+GARMIN_META_FILE = os.path.join(parent, "run_page", "garmin_activity_meta.json")
 
 # TODO: Move into nike_sync
 BASE_URL = "https://api.nike.com/sport/v3/me"
