@@ -69,12 +69,14 @@ jobs:
           REBUILD_FLAG_FILE=".type_mapping_rebuild_done"
           if [ -f "$REBUILD_FLAG_FILE" ]; then
             echo "Type mapping rebuild already done. Skipping."
+            echo "REBUILD_ACTIVITY_TYPES=false" >> "$GITHUB_ENV"
             exit 0
           fi
 
           echo "First run after type-mapping update. Reset imported list to reprocess historical GPX files."
           rm -f imported.json
           echo "done" > "$REBUILD_FLAG_FILE"
+          echo "REBUILD_ACTIVITY_TYPES=true" >> "$GITHUB_ENV"
 
       - name: Cache Data Files
         if: env.SAVE_DATA_IN_GITHUB_CACHE == 'true'
@@ -281,6 +283,11 @@ jobs:
         if: env.RUN_TYPE == 'tulipsport'
         run: |
           python run_page/tulipsport_sync.py ${{ secrets.TULIPSPORT_TOKEN }} --with-gpx
+
+      - name: Rebuild activities from existing GPX cache
+        if: env.REBUILD_ACTIVITY_TYPES == 'true'
+        run: |
+          python run_page/gpx_sync.py
 
       - name: Make svg GitHub profile
         if: env.RUN_TYPE != 'pass'
