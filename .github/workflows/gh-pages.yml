@@ -88,7 +88,7 @@ jobs:
           fi
           if [ -n "$MAPBOX_TOKEN_FROM_SECRET" ]; then
             echo "::add-mask::$MAPBOX_TOKEN_FROM_SECRET"
-            echo "VITE_MAPBOX_TOKEN=$MAPBOX_TOKEN_FROM_SECRET" >> "$GITHUB_ENV"
+            export VITE_MAPBOX_TOKEN="$MAPBOX_TOKEN_FROM_SECRET"
           else
             echo "Mapbox token secret is empty. Build will continue without map tiles."
           fi
