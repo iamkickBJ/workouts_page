@@ -8,7 +8,9 @@ import {
   ROAD_LABEL_DISPLAY,
   MAIN_COLOR,
   MAPBOX_TOKEN,
+  MAPBOX_TOKEN_IS_VALID,
   MAP_TOKEN_MISSING_LABEL,
+  MAP_TOKEN_INVALID_LABEL,
   PROVINCE_FILL_COLOR,
   COUNTRY_FILL_COLOR,
   USE_DASH_LINE,
@@ -100,12 +102,18 @@ const RunMap = ({
     opacity: 0.3,
   };
 
-  if (!MAPBOX_TOKEN) {
+  const mapTokenErrorMessage = !MAPBOX_TOKEN
+    ? MAP_TOKEN_MISSING_LABEL
+    : !MAPBOX_TOKEN_IS_VALID
+      ? MAP_TOKEN_INVALID_LABEL
+      : '';
+
+  if (mapTokenErrorMessage) {
     return (
       <div style={style} className={styles.mapFallback}>
         <RunMapButtons changeYear={changeYear} thisYear={thisYear} />
         <span className={styles.runTitle}>{title}</span>
-        <div className={styles.mapFallbackText}>{MAP_TOKEN_MISSING_LABEL}</div>
+        <div className={styles.mapFallbackText}>{mapTokenErrorMessage}</div>
       </div>
     );
   }

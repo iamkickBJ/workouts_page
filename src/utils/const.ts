@@ -1,6 +1,7 @@
 // const
 // 建议通过 VITE_MAPBOX_TOKEN 注入，避免把 token 提交到仓库里
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
+const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN || '').trim();
+const MAPBOX_TOKEN_IS_VALID = MAPBOX_TOKEN.startsWith('pk.');
 
 const MUNICIPALITY_CITIES_ARR = [
   '北京市',
@@ -70,6 +71,9 @@ const NO_MAP_DATA_LABEL = IS_CHINESE ? '(这条运动没有地图轨迹)' : '(No
 const MAP_TOKEN_MISSING_LABEL = IS_CHINESE
   ? '地图未显示：请在 GitHub 仓库 Secrets 中配置 MAPBOX_TOKEN（或 VITE_MAPBOX_TOKEN）'
   : 'Map hidden: set MAPBOX_TOKEN (or VITE_MAPBOX_TOKEN) in GitHub Secrets.';
+const MAP_TOKEN_INVALID_LABEL = IS_CHINESE
+  ? '地图未显示：Mapbox Token 无效，请使用 pk. 开头的 Public Token'
+  : 'Map hidden: invalid Mapbox token, please use a public token starting with pk.';
 
 // 定义各种运动的标题
 const FULL_MARATHON_RUN_TITLE = IS_CHINESE ? '全程马拉松' : 'Full Marathon';
@@ -164,6 +168,7 @@ export {
   HEART_RATE_SHORT_LABEL,
   HEATMAP_LABEL,
   MAPBOX_TOKEN,
+  MAPBOX_TOKEN_IS_VALID,
   MUNICIPALITY_CITIES_ARR,
   MAP_LAYER_LIST,
   IS_CHINESE,
@@ -171,6 +176,7 @@ export {
   LOADING_LABEL,
   NO_MAP_DATA_LABEL,
   MAP_TOKEN_MISSING_LABEL,
+  MAP_TOKEN_INVALID_LABEL,
   PACE_LABEL,
   ROAD_LABEL_DISPLAY,
   STREAK_LABEL,
