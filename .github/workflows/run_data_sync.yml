@@ -63,6 +63,19 @@ jobs:
         run: |
           pip install -r requirements.txt
 
+      - name: One-time rebuild activity types from local GPX
+        if: env.RUN_TYPE == 'garmin' || env.RUN_TYPE == 'garmin_cn' || env.RUN_TYPE == 'only_gpx'
+        run: |
+          REBUILD_FLAG_FILE=".type_mapping_rebuild_done"
+          if [ -f "$REBUILD_FLAG_FILE" ]; then
+            echo "Type mapping rebuild already done. Skipping."
+            exit 0
+          fi
+
+          echo "First run after type-mapping update. Reset imported list to reprocess historical GPX files."
+          rm -f imported.json
+          echo "done" > "$REBUILD_FLAG_FILE"
+
       - name: Cache Data Files
         if: env.SAVE_DATA_IN_GITHUB_CACHE == 'true'
         uses: actions/cache@v4

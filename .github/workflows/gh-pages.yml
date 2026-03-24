@@ -82,6 +82,16 @@ jobs:
 
       - name: Build
         run: |
+          MAPBOX_TOKEN_FROM_SECRET="${{ secrets.VITE_MAPBOX_TOKEN }}"
+          if [ -z "$MAPBOX_TOKEN_FROM_SECRET" ]; then
+            MAPBOX_TOKEN_FROM_SECRET="${{ secrets.MAPBOX_TOKEN }}"
+          fi
+          if [ -n "$MAPBOX_TOKEN_FROM_SECRET" ]; then
+            echo "::add-mask::$MAPBOX_TOKEN_FROM_SECRET"
+            echo "VITE_MAPBOX_TOKEN=$MAPBOX_TOKEN_FROM_SECRET" >> "$GITHUB_ENV"
+          else
+            echo "Mapbox token secret is empty. Build will continue without map tiles."
+          fi
           pnpm build
           touch dist/.nojekyll
           # 👇 修复白屏的逻辑依然保留
