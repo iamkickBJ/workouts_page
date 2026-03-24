@@ -18,10 +18,6 @@ const data: ISiteMetadataResult = {
   keywords: '运动记录, 跑步, 骑行, 虚拟骑行, 徒步, 游泳, 户外',
   navLinks: [
     {
-      name: '博客',
-      url: 'https://iamkickbj.github.io/', // 博客链接，如果没博客可以填您的 GitHub 主页
-    },
-    {
       name: '关于',
       url: 'https://github.com/iamkickbj', // 关于页面，链接到您的 GitHub
     },

@@ -240,7 +240,7 @@ class Track:
         self.average_heartrate = (
             sum(heart_rate_list) / len(heart_rate_list) if heart_rate_list else None
         )
-        self.moving_dict = self._get_moving_data(gpx)
+        self.moving_dict = self._get_moving_data(gpx, self.length)
 
     def _load_fit_data(self, fit: FitFile):
         _polylines = []
@@ -320,15 +320,18 @@ class Track:
             pass
 
     @staticmethod
-    def _get_moving_data(gpx):
+    def _get_moving_data(gpx, total_distance):
         moving_data = gpx.get_moving_data()
+        # Prefer total 2D track length for persisted activity distance so it
+        # matches platform totals more closely; keep moving_time for pace metrics.
+        distance = total_distance if total_distance else moving_data.moving_distance
         return {
-            "distance": moving_data.moving_distance,
+            "distance": distance,
             "moving_time": datetime.timedelta(seconds=moving_data.moving_time),
             "elapsed_time": datetime.timedelta(
                 seconds=(moving_data.moving_time + moving_data.stopped_time)
             ),
-            "average_speed": moving_data.moving_distance / moving_data.moving_time
+            "average_speed": distance / moving_data.moving_time
             if moving_data.moving_time
             else 0,
         }
