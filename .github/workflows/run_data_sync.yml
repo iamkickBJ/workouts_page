@@ -136,14 +136,8 @@ jobs:
           GARMIN_SECRET='${{ secrets.GARMIN_SECRET_STRING }}'
 
           if [ -z "$GARMIN_SECRET" ]; then
-            echo "GARMIN_SECRET_STRING is empty. Trying to generate it from GARMIN_EMAIL/GARMIN_PASSWORD..."
-
-            if [ -z '${{ secrets.GARMIN_EMAIL }}' ] || [ -z '${{ secrets.GARMIN_PASSWORD }}' ]; then
-              echo "GARMIN_EMAIL/GARMIN_PASSWORD are not configured, so the workflow cannot refresh GARMIN_SECRET_STRING automatically."
-              exit 1
-            fi
-
-            GARMIN_SECRET=$(python run_page/get_garmin_secret.py '${{ secrets.GARMIN_EMAIL }}' '${{ secrets.GARMIN_PASSWORD }}')
+            echo "GARMIN_SECRET_STRING is empty. Please generate a fresh secret locally and set it in repository secrets."
+            exit 1
           fi
 
           echo "::add-mask::$GARMIN_SECRET"
@@ -152,40 +146,6 @@ jobs:
       - name: Run sync Garmin script
         if: env.RUN_TYPE == 'garmin'
         run: |
-          python run_page/garmin_sync.py "$GARMIN_SECRET_RUNTIME" && exit 0
-
-          echo "Stored Garmin secret failed. Trying to refresh it from GARMIN_EMAIL/GARMIN_PASSWORD..."
-
-          if [ -z '${{ secrets.GARMIN_EMAIL }}' ] || [ -z '${{ secrets.GARMIN_PASSWORD }}' ]; then
-            echo "GARMIN_EMAIL/GARMIN_PASSWORD are not configured, so the workflow cannot refresh GARMIN_SECRET_STRING automatically."
-            exit 1
-          fi
-
-          secret_retry_ok=0
-          for attempt in 1 2 3; do
-            echo "Refreshing Garmin secret (attempt $attempt/3)..."
-            set +e
-            GARMIN_SECRET_RUNTIME=$(python run_page/get_garmin_secret.py '${{ secrets.GARMIN_EMAIL }}' '${{ secrets.GARMIN_PASSWORD }}' 2>garmin_secret_error.log)
-            secret_status=$?
-            set -e
-            if [ $secret_status -eq 0 ]; then
-              secret_retry_ok=1
-              break
-            fi
-            sleep $((attempt * 20))
-          done
-
-          if [ $secret_retry_ok -ne 1 ]; then
-            if grep -qi "429" garmin_secret_error.log; then
-              echo "Garmin login is rate-limited (HTTP 429). Skip this run and keep previous data."
-              exit 0
-            fi
-            cat garmin_secret_error.log
-            exit 1
-          fi
-
-          echo "::add-mask::$GARMIN_SECRET_RUNTIME"
-          echo "GARMIN_SECRET_RUNTIME=$GARMIN_SECRET_RUNTIME" >> "$GITHUB_ENV"
           python run_page/garmin_sync.py "$GARMIN_SECRET_RUNTIME"
         # If you only want to sync `type running` add args --only-run, default script is to sync all data (rides and runs).
         # python run_page/garmin_sync.py ${{ secrets.GARMIN_SECRET_STRING }} --only-run
@@ -196,14 +156,8 @@ jobs:
           GARMIN_SECRET='${{ secrets.GARMIN_SECRET_STRING_CN }}'
 
           if [ -z "$GARMIN_SECRET" ]; then
-            echo "GARMIN_SECRET_STRING_CN is empty. Trying to generate it from GARMIN_CN_EMAIL/GARMIN_CN_PASSWORD..."
-
-            if [ -z '${{ secrets.GARMIN_CN_EMAIL }}' ] || [ -z '${{ secrets.GARMIN_CN_PASSWORD }}' ]; then
-              echo "GARMIN_CN_EMAIL/GARMIN_CN_PASSWORD are not configured, so the workflow cannot refresh GARMIN_SECRET_STRING_CN automatically."
-              exit 1
-            fi
-
-            GARMIN_SECRET=$(python run_page/get_garmin_secret.py '${{ secrets.GARMIN_CN_EMAIL }}' '${{ secrets.GARMIN_CN_PASSWORD }}' --is-cn)
+            echo "GARMIN_SECRET_STRING_CN is empty. Please generate a fresh secret locally and set it in repository secrets."
+            exit 1
           fi
 
           echo "::add-mask::$GARMIN_SECRET"
@@ -212,40 +166,6 @@ jobs:
       - name: Run sync Garmin CN script
         if: env.RUN_TYPE == 'garmin_cn'
         run: |
-          python run_page/garmin_sync.py "$GARMIN_SECRET_CN_RUNTIME" --is-cn && exit 0
-
-          echo "Stored Garmin CN secret failed. Trying to refresh it from GARMIN_CN_EMAIL/GARMIN_CN_PASSWORD..."
-
-          if [ -z '${{ secrets.GARMIN_CN_EMAIL }}' ] || [ -z '${{ secrets.GARMIN_CN_PASSWORD }}' ]; then
-            echo "GARMIN_CN_EMAIL/GARMIN_CN_PASSWORD are not configured, so the workflow cannot refresh GARMIN_SECRET_STRING_CN automatically."
-            exit 1
-          fi
-
-          secret_retry_ok=0
-          for attempt in 1 2 3; do
-            echo "Refreshing Garmin CN secret (attempt $attempt/3)..."
-            set +e
-            GARMIN_SECRET_CN_RUNTIME=$(python run_page/get_garmin_secret.py '${{ secrets.GARMIN_CN_EMAIL }}' '${{ secrets.GARMIN_CN_PASSWORD }}' --is-cn 2>garmin_cn_secret_error.log)
-            secret_status=$?
-            set -e
-            if [ $secret_status -eq 0 ]; then
-              secret_retry_ok=1
-              break
-            fi
-            sleep $((attempt * 20))
-          done
-
-          if [ $secret_retry_ok -ne 1 ]; then
-            if grep -qi "429" garmin_cn_secret_error.log; then
-              echo "Garmin CN login is rate-limited (HTTP 429). Skip this run and keep previous data."
-              exit 0
-            fi
-            cat garmin_cn_secret_error.log
-            exit 1
-          fi
-
-          echo "::add-mask::$GARMIN_SECRET_CN_RUNTIME"
-          echo "GARMIN_SECRET_CN_RUNTIME=$GARMIN_SECRET_CN_RUNTIME" >> "$GITHUB_ENV"
           python run_page/garmin_sync.py "$GARMIN_SECRET_CN_RUNTIME" --is-cn
         # If you only want to sync `type running` add args --only-run, default script is to sync all data (rides and runs).
         # python run_page/garmin_sync.py ${{ secrets.GARMIN_SECRET_STRING_CN }}  --only-run --is-cn
