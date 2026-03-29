@@ -146,6 +146,28 @@ jobs:
       - name: Run sync Garmin script
         if: env.RUN_TYPE == 'garmin'
         run: |
+          python run_page/garmin_sync.py "$GARMIN_SECRET_RUNTIME" && exit 0
+
+          echo "Stored GARMIN_SECRET_STRING failed. Trying one-time refresh from GARMIN_EMAIL/GARMIN_PASSWORD..."
+          if [ -z '${{ secrets.GARMIN_EMAIL }}' ] || [ -z '${{ secrets.GARMIN_PASSWORD }}' ]; then
+            echo "GARMIN_EMAIL/GARMIN_PASSWORD are not configured."
+            exit 1
+          fi
+
+          set +e
+          GARMIN_SECRET_RUNTIME=$(python run_page/get_garmin_secret.py '${{ secrets.GARMIN_EMAIL }}' '${{ secrets.GARMIN_PASSWORD }}' 2>garmin_secret_error.log)
+          secret_status=$?
+          set -e
+
+          if [ $secret_status -ne 0 ]; then
+            if grep -qi "429" garmin_secret_error.log; then
+              echo "Garmin login is rate-limited (HTTP 429). Please retry later."
+            fi
+            cat garmin_secret_error.log
+            exit 1
+          fi
+
+          echo "::add-mask::$GARMIN_SECRET_RUNTIME"
           python run_page/garmin_sync.py "$GARMIN_SECRET_RUNTIME"
         # If you only want to sync `type running` add args --only-run, default script is to sync all data (rides and runs).
         # python run_page/garmin_sync.py ${{ secrets.GARMIN_SECRET_STRING }} --only-run
