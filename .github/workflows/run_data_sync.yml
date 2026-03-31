@@ -133,10 +133,15 @@ jobs:
       - name: Prepare Garmin secret
         if: env.RUN_TYPE == 'garmin'
         env:
-          GARMIN_SECRET: ${{ secrets.GARMIN_SECRET_STRING }}
+          GARMIN_SECRET: ${{ secrets.GARMIN_SECRET_PERMANENT }}
         run: |
           if [ -z "$GARMIN_SECRET" ]; then
-            echo "GARMIN_SECRET_STRING is empty. Please generate a fresh secret locally and set it in repository secrets."
+            # fallback to legacy secret if permanent is missing (though we just set it)
+            GARMIN_SECRET='${{ secrets.GARMIN_SECRET_STRING }}'
+          fi
+
+          if [ -z "$GARMIN_SECRET" ]; then
+            echo "::error::Both GARMIN_SECRET_PERMANENT and GARMIN_SECRET_STRING are empty!"
             exit 1
           fi
 
