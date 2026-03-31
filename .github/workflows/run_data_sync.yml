@@ -133,8 +133,8 @@ jobs:
       - name: Prepare Garmin secret
         if: env.RUN_TYPE == 'garmin'
         env:
-          PART1: ${{ secrets.GARMIN_SECRET_PART1 }}
-          PART2: ${{ secrets.GARMIN_SECRET_PART2 }}
+          PART1: ${{ secrets.GPS_P1 }}
+          PART2: ${{ secrets.GPS_P2 }}
           OLD_SECRET: ${{ secrets.GARMIN_SECRET_PERMANENT }}
         run: |
           # Reconstruct the secret from parts (prevents truncation/filtering)
@@ -146,12 +146,13 @@ jobs:
           fi
 
           if [ -z "$GARMIN_SECRET" ]; then
-            echo "::error::Both PART1+PART2 and PERMANENT secrets are empty!"
+            echo "::error::Both GPS拼图 (P1+P2) and PERMANENT secrets are empty!"
             exit 1
           fi
-
+          
+          # Mask and export
           echo "::add-mask::$GARMIN_SECRET"
-          echo "GARMIN_SECRET_RUNTIME=$GARMIN_SECRET" >> "$GITHUB_ENV"
+          echo "GARMIN_SECRET_RUNTIME=$GARMIN_SECRET" >> $GITHUB_ENV
 
       - name: Run sync Garmin script
         if: env.RUN_TYPE == 'garmin'
