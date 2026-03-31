@@ -132,9 +132,9 @@ jobs:
       # for garmin if you want generate `tcx` you can add --tcx command in the args.
       - name: Prepare Garmin secret
         if: env.RUN_TYPE == 'garmin'
+        env:
+          GARMIN_SECRET: ${{ secrets.GARMIN_SECRET_STRING }}
         run: |
-          GARMIN_SECRET='${{ secrets.GARMIN_SECRET_STRING }}'
-
           if [ -z "$GARMIN_SECRET" ]; then
             echo "GARMIN_SECRET_STRING is empty. Please generate a fresh secret locally and set it in repository secrets."
             exit 1
