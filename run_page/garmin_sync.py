@@ -19,6 +19,10 @@ import cloudscraper
 import garth
 import httpx
 from config import FOLDER_DICT, GARMIN_META_FILE, JSON_FILE, SQL_FILE, config
+
+# Patch garth to use a browser User-Agent to bypass bot detection
+garth.http.USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+
 from garmin_device_adaptor import wrap_device_info
 from utils import make_activities_file_only
 
