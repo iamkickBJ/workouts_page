@@ -57,8 +57,7 @@ class Garmin:
         """
         Init module
         """
-        self.req = httpx.AsyncClient(timeout=TIME_OUT)
-        self.cf_req = cloudscraper.CloudScraper()
+        self.cf_req = cloudscraper.create_scraper()
         self.URL_DICT = (
             GARMIN_CN_URL_DICT
             if auth_domain and str(auth_domain).upper() == "CN"
@@ -72,7 +71,7 @@ class Garmin:
             garth.client.refresh_oauth2()
 
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "origin": self.URL_DICT.get("SSO_URL_ORIGIN"),
             "nk": "NT",
             "Authorization": str(garth.client.oauth2_token),
@@ -83,17 +82,20 @@ class Garmin:
 
     async def fetch_data(self, url, retrying=False):
         """
-        Fetch and return data
+        Fetch and return data using cloudscraper to bypass Cloudflare
         """
         try:
-            response = await self.req.get(url, headers=self.headers)
+            # Shift to synchronous cloudscraper (running in thread to stay async-compatible)
+            # Or just use it directly since it is more reliable for 429 bypass
+            response = self.cf_req.get(url, headers=self.headers)
             if response.status_code == 429:
-                raise GarminConnectTooManyRequestsError("Too many requests")
+                raise GarminConnectTooManyRequestsError("Too many requests from Garmin")
+            
             logger.debug(f"fetch_data got response code {response.status_code}")
             response.raise_for_status()
             return response.json()
         except Exception as err:
-            print(err)
+            print(f"Error fetching data: {err}")
             if retrying:
                 logger.debug(
                     "Exception occurred during data retrieval, relogin without effect: %s"
@@ -105,7 +107,7 @@ class Garmin:
                     "Exception occurred during data retrieval - perhaps session expired - trying relogin: %s"
                     % err
                 )
-                await self.fetch_data(url, retrying=True)
+                return await self.fetch_data(url, retrying=True)
 
     async def get_activities(self, start, limit):
         """
@@ -121,9 +123,11 @@ class Garmin:
         if file_type == "fit":
             url = f"{self.modern_url}/download-service/files/activity/{activity_id}"
         logger.info(f"Download activity from {url}")
-        response = await self.req.get(url, headers=self.headers)
+        
+        # Using cloudscraper for downloads as well
+        response = self.cf_req.get(url, headers=self.headers)
         response.raise_for_status()
-        return response.read()
+        return response.content
 
     async def upload_activities_original(self, datas, use_fake_garmin_device=False):
         print(
@@ -144,7 +148,8 @@ class Garmin:
             files = {"file": (data.filename, file_body)}
 
             try:
-                res = await self.req.post(
+                # Using cloudscraper for uploads
+                res = self.cf_req.post(
                     self.upload_url, files=files, headers=self.headers
                 )
                 os.remove(data.filename)
@@ -158,7 +163,7 @@ class Garmin:
                 print("garmin upload success: ", resp)
             except Exception as e:
                 print("garmin upload failed: ", e)
-        await self.req.aclose()
+        # cloudscraper doesn't need explicit close like httpx AsyncClient
 
 
 class GarminConnectHttpError(Exception):
