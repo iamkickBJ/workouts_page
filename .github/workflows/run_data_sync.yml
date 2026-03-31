@@ -133,15 +133,20 @@ jobs:
       - name: Prepare Garmin secret
         if: env.RUN_TYPE == 'garmin'
         env:
-          GARMIN_SECRET: ${{ secrets.GARMIN_SECRET_PERMANENT }}
+          PART1: ${{ secrets.GARMIN_SECRET_PART1 }}
+          PART2: ${{ secrets.GARMIN_SECRET_PART2 }}
+          OLD_SECRET: ${{ secrets.GARMIN_SECRET_PERMANENT }}
         run: |
+          # Reconstruct the secret from parts (prevents truncation/filtering)
+          GARMIN_SECRET="${PART1}${PART2}"
+          
           if [ -z "$GARMIN_SECRET" ]; then
-            # fallback to legacy secret if permanent is missing (though we just set it)
-            GARMIN_SECRET='${{ secrets.GARMIN_SECRET_STRING }}'
+            # fallback to legacy
+            GARMIN_SECRET="$OLD_SECRET"
           fi
 
           if [ -z "$GARMIN_SECRET" ]; then
-            echo "::error::Both GARMIN_SECRET_PERMANENT and GARMIN_SECRET_STRING are empty!"
+            echo "::error::Both PART1+PART2 and PERMANENT secrets are empty!"
             exit 1
           fi
 
