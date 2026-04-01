@@ -210,7 +210,7 @@ class Track:
         if self.end_time is None:
             self.end_time = self.start_time or datetime.datetime.now()
 
-        self.length = gpx.length_2d()
+        self.length = gpx.length_3d() if gpx.has_elevations() else gpx.length_2d()
         if self.length == 0:
             # try to get length from metadata if available
             try:
@@ -218,7 +218,6 @@ class Track:
             except:
                 pass
         
-        gpx.simplify()
         polyline_container = []
         heart_rate_list = []
         # determinate type
@@ -281,6 +280,7 @@ class Track:
             sum(heart_rate_list) / len(heart_rate_list) if heart_rate_list else None
         )
         self.moving_dict = self._get_moving_data(gpx, self.length)
+        gpx.simplify()
         self._override_with_garmin_meta()
 
     def _override_with_garmin_meta(self):

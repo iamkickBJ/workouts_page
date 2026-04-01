@@ -126,9 +126,9 @@ const TYPE_TRANSLATE = {
   Flight: FLIGHT_TITLE,
 };
 
-const nike = 'rgb(224,237,94)';
-const yellow = 'rgb(224,237,94)';
-const green = 'rgb(0,237,94)';
+const nike = 'rgb(77, 210, 255)';
+const yellow = 'rgb(77, 210, 255)';
+const green = 'rgb(77, 210, 255)'; // Unified Premium Azure
 const pink = 'rgb(237,85,219)';
 const cyan = 'rgb(112,243,255)';
 const IKB = 'rgb(0,47,167)';
@@ -142,9 +142,9 @@ const red = 'rgb(255,0,0)'; // 大红色
 // issues #92 and #198
 export const NEED_FIX_MAP = false;
 export const MAIN_COLOR = green;
-export const RUN_COLOR = yellow;
+export const RUN_COLOR = green;
 export const RIDE_COLOR = green;
-export const VIRTUAL_RIDE_COLOR = veryPeri; // 虚拟骑行将显示为紫蓝色
+export const VIRTUAL_RIDE_COLOR = green; // 虚拟骑行同步统一
 export const HIKE_COLOR = pink;
 export const SWIM_COLOR = gold;
 export const ROWING_COLOR = cyan;
