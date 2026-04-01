@@ -159,23 +159,13 @@ class TrackLoader:
 
     @staticmethod
     def _load_data_tracks(file_names, load_func=load_gpx_file):
-        """
-        TODO refactor with _load_tcx_tracks
-        """
         tracks = {}
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            future_to_file_name = {
-                executor.submit(load_func, file_name): file_name
-                for file_name in file_names
-            }
-        for future in concurrent.futures.as_completed(future_to_file_name):
-            file_name = future_to_file_name[future]
+        for file_name in file_names:
             try:
-                t = future.result()
-            except TrackLoadError as e:
-                log.error(f"Error while loading {file_name}: {e}")
-            else:
+                t = load_func(file_name)
                 tracks[file_name] = t
+            except Exception as e:
+                log.error(f"Error while loading {file_name}: {e}")
         return tracks
 
     @staticmethod

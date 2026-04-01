@@ -3,7 +3,10 @@ import os
 import sys
 
 import arrow
-import stravalib
+try:
+    import stravalib
+except Exception:
+    stravalib = None
 from config import MAPPING_TYPE
 from gpxtrackposter import track_loader
 from sqlalchemy import func
@@ -20,7 +23,7 @@ IGNORE_BEFORE_SAVING = os.getenv("IGNORE_BEFORE_SAVING", False)
 
 class Generator:
     def __init__(self, db_path):
-        self.client = stravalib.Client()
+        self.client = stravalib.Client() if stravalib else None
         self.session = init_db(db_path)
 
         self.client_id = ""

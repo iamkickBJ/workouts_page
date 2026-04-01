@@ -9,8 +9,12 @@ try:
 except:
     pass
 from generator import Generator
-from stravalib.client import Client
-from stravalib.exc import RateLimitExceeded
+try:
+    from stravalib.client import Client
+    from stravalib.exc import RateLimitExceeded
+except Exception:
+    Client = None
+    RateLimitExceeded = Exception
 
 
 def adjust_time(time, tz_name):

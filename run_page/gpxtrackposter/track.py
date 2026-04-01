@@ -190,32 +190,53 @@ class Track:
     def _load_gpx_data(self, gpx):
         self.start_time, self.end_time = gpx.get_time_bounds()
         # use timestamp as id
-        self.run_id = self.__make_run_id(self.start_time)
         if self.start_time is None:
-            raise TrackLoadError("Track has no start time.")
+            self.start_time = gpx.time
+        if self.start_time is None:
+            # try to get from first track point
+            try:
+                if gpx.tracks and gpx.tracks[0].segments and gpx.tracks[0].segments[0].points:
+                    self.start_time = gpx.tracks[0].segments[0].points[0].time
+            except:
+                pass
+
+        if self.start_time:
+            self.run_id = self.__make_run_id(self.start_time)
+        else:
+            # use a hash of the filename as a last resort
+            file_name = self.file_names[0] if self.file_names else "unknown"
+            self.run_id = int(abs(hash(file_name)) % (10**13))
+
         if self.end_time is None:
-            raise TrackLoadError("Track has no end time.")
+            self.end_time = self.start_time or datetime.datetime.now()
+
         self.length = gpx.length_2d()
         if self.length == 0:
-            raise TrackLoadError("Track is empty.")
+            # try to get length from metadata if available
+            try:
+                self._override_with_garmin_meta()
+            except:
+                pass
+        
         gpx.simplify()
         polyline_container = []
         heart_rate_list = []
         # determinate type
-        if gpx.tracks[0].type:
+        if gpx.tracks and gpx.tracks[0].type:
             self.type = gpx.tracks[0].type
         # determinate source
         if gpx.creator:
             self.source = gpx.creator
-        elif gpx.tracks[0].source:
+        elif gpx.tracks and gpx.tracks[0].source:
             self.source = gpx.tracks[0].source
         if self.source == "xingzhe":
             self.start_time_local = self.start_time
-            self.run_id = gpx.tracks[0].number
+            if gpx.tracks:
+                self.run_id = gpx.tracks[0].number
         # determinate name
         if gpx.name:
             self.name = gpx.name
-        elif gpx.tracks[0].name:
+        elif gpx.tracks and gpx.tracks[0].name:
             self.name = gpx.tracks[0].name
         else:
             self.name = self.type + " from " + self.source
@@ -229,7 +250,7 @@ class Track:
                             for child in p.extensions[0]
                         }
                         for p in s.points
-                        if p.extensions
+                        if p.extensions and len(p.extensions) > 0
                     ]
                     heart_rate_list.extend(
                         [
