@@ -207,10 +207,14 @@ class Track:
             file_name = self.file_names[0] if self.file_names else "unknown"
             self.run_id = int(abs(hash(file_name)) % (10**13))
 
-        if self.end_time is None:
-            self.end_time = self.start_time or datetime.datetime.now()
-
+        gpx.simplify(max_distance=2.0)
         self.length = gpx.length_2d()
+        if self.length == 0:
+            # try to get length from metadata if available
+            try:
+                self._override_with_garmin_meta()
+            except:
+                pass
         
         polyline_container = []
         heart_rate_list = []
@@ -274,7 +278,6 @@ class Track:
             sum(heart_rate_list) / len(heart_rate_list) if heart_rate_list else None
         )
         self.moving_dict = self._get_moving_data(gpx, self.length)
-        gpx.simplify()
         self._override_with_garmin_meta()
 
     def _override_with_garmin_meta(self):
