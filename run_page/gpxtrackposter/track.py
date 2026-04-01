@@ -211,12 +211,6 @@ class Track:
             self.end_time = self.start_time or datetime.datetime.now()
 
         self.length = gpx.length_2d()
-        if self.length == 0:
-            # try to get length from metadata if available
-            try:
-                self._override_with_garmin_meta()
-            except:
-                pass
         
         polyline_container = []
         heart_rate_list = []
@@ -294,7 +288,7 @@ class Track:
             return
 
         official_distance = garmin_meta.get("distance")
-        if official_distance and official_distance > 0:
+        if official_distance:
             self.length = float(official_distance)
             self.moving_dict["distance"] = float(official_distance)
             moving_seconds = self.moving_dict.get("moving_time", datetime.timedelta()).total_seconds()
