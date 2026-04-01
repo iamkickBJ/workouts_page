@@ -338,6 +338,11 @@ async def download_new_activities(
     print(f"{len(to_generate_garmin_ids)} new activities to be downloaded")
 
     start_time = time.time()
+    if options.summary_only:
+        print("Summary only mode: Metadata saved. Skipping GPX/FIT downloads.")
+        client.cf_req.close()
+        return []
+
     await gather_with_concurrency(
         10,
         [
@@ -384,6 +389,12 @@ if __name__ == "__main__":
         const="fit",
         default="gpx",
         help="to download personal documents or ebook",
+    )
+    parser.add_argument(
+        "--summary-only",
+        dest="summary_only",
+        action="store_true",
+        help="only sync activity summary metadata, skip files download",
     )
     options = parser.parse_args()
     secret_string = options.secret_string

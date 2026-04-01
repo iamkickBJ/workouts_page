@@ -294,9 +294,15 @@ class Track:
         if official_distance:
             self.length = float(official_distance)
             self.moving_dict["distance"] = float(official_distance)
+            
+        official_moving_seconds = garmin_meta.get("movingDuration")
+        if official_moving_seconds:
+             self.moving_dict["moving_time"] = datetime.timedelta(seconds=float(official_moving_seconds))
+
+        if official_distance or official_moving_seconds:
             moving_seconds = self.moving_dict.get("moving_time", datetime.timedelta()).total_seconds()
             if moving_seconds:
-                self.moving_dict["average_speed"] = float(official_distance) / moving_seconds
+                self.moving_dict["average_speed"] = self.moving_dict["distance"] / moving_seconds
 
         activity_name = garmin_meta.get("name")
         if activity_name:
