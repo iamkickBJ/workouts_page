@@ -137,8 +137,8 @@ jobs:
           PART2: ${{ secrets.GPS_P2 }}
           OLD_SECRET: ${{ secrets.GARMIN_SECRET_PERMANENT }}
         run: |
-          # Reconstruct the secret from parts (prevents truncation/filtering)
-          GARMIN_SECRET="${PART1}${PART2}"
+          # Robust concatenation of reconstruction parts
+          GARMIN_SECRET=$(echo "${PART1}${PART2}" | tr -d '[:space:]')
           
           if [ -z "$GARMIN_SECRET" ]; then
             # fallback to legacy
@@ -146,22 +146,25 @@ jobs:
           fi
 
           if [ -z "$GARMIN_SECRET" ]; then
-            echo "::error::Both GPS拼图 (P1+P2) and PERMANENT secrets are empty!"
+            echo "::error::Both GPS拼图 (P1+P2) and PERMANENT secrets are empty! Please check your GitHub Secrets."
             exit 1
           fi
           
-          # Mask and export
+          # Mask and export to environment
           echo "::add-mask::$GARMIN_SECRET"
           echo "GARMIN_SECRET_RUNTIME=$GARMIN_SECRET" >> $GITHUB_ENV
 
       - name: Run sync Garmin script
         if: env.RUN_TYPE == 'garmin'
         run: |
+          echo "Attempting sync with stored secret..."
           python run_page/garmin_sync.py "$GARMIN_SECRET_RUNTIME" && exit 0
 
-          echo "Stored GARMIN_SECRET_STRING failed. Trying one-time refresh from GARMIN_EMAIL/GARMIN_PASSWORD..."
+          echo "Stored secret failed or session expired. Waiting 10s before fallback login..."
+          sleep 10
+
           if [ -z '${{ secrets.GARMIN_EMAIL }}' ] || [ -z '${{ secrets.GARMIN_PASSWORD }}' ]; then
-            echo "GARMIN_EMAIL/GARMIN_PASSWORD are not configured."
+            echo "GARMIN_EMAIL/GARMIN_PASSWORD are not configured. Cannot perform fallback login."
             exit 1
           fi
 
@@ -172,7 +175,7 @@ jobs:
 
           if [ $secret_status -ne 0 ]; then
             if grep -qi "429" garmin_secret_error.log; then
-              echo "Garmin login is rate-limited (HTTP 429). Please retry later."
+              echo "Garmin login is rate-limited (HTTP 429). Please avoid triggering manually for 24h."
             fi
             cat garmin_secret_error.log
             exit 1

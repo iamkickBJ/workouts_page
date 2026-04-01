@@ -8,6 +8,7 @@ import asyncio
 import json
 import logging
 import os
+import random
 import sys
 import time
 import traceback
@@ -71,7 +72,7 @@ class Garmin:
             garth.client.refresh_oauth2()
 
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
             "origin": self.URL_DICT.get("SSO_URL_ORIGIN"),
             "nk": "NT",
             "Authorization": str(garth.client.oauth2_token),
@@ -219,6 +220,8 @@ def build_garmin_client(secret_string, auth_domain, is_only_running=False):
 
 
 async def download_garmin_data(client, activity_id, file_type="gpx"):
+    # Add random jitter to avoid 429
+    await asyncio.sleep(random.uniform(1.0, 3.0))
     folder = FOLDER_DICT.get(file_type, "gpx")
     try:
         file_data = await client.download_activity(activity_id, file_type=file_type)
@@ -344,7 +347,8 @@ async def download_new_activities(
     )
     print(f"Download finished. Elapsed {time.time()-start_time} seconds")
 
-    await client.req.aclose()
+    # cloudscraper scraper is a requests.Session, no need to await aclose
+    client.cf_req.close()
     return to_generate_garmin_ids
 
 
@@ -410,7 +414,10 @@ if __name__ == "__main__":
             )
         )
         loop.run_until_complete(future)
-        make_activities_file_only(SQL_FILE, folder, JSON_FILE, file_suffix=file_type)
+        # ⚠️ Restore Data accuracy: use make_activities_file instead of make_activities_file_only
+        # This ensures all activities > 0.1km are included, avoiding restrictive mapping filters.
+        from utils import make_activities_file
+        make_activities_file(SQL_FILE, folder, JSON_FILE, file_suffix=file_type)
     except GarminConnectAuthenticationError as err:
         print(str(err))
         sys.exit(1)
