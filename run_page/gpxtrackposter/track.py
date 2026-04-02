@@ -219,16 +219,16 @@ class Track:
         polyline_container = []
         heart_rate_list = []
         # determinate type
-        if gpx.tracks and gpx.tracks[0].type:
+        if gpx.tracks and len(gpx.tracks) > 0 and gpx.tracks[0].type:
             self.type = gpx.tracks[0].type
         # determinate source
         if gpx.creator:
             self.source = gpx.creator
-        elif gpx.tracks and gpx.tracks[0].source:
+        elif gpx.tracks and len(gpx.tracks) > 0 and gpx.tracks[0].source:
             self.source = gpx.tracks[0].source
         if self.source == "xingzhe":
             self.start_time_local = self.start_time
-            if gpx.tracks:
+            if gpx.tracks and len(gpx.tracks) > 0:
                 self.run_id = gpx.tracks[0].number
         # determinate name
         if gpx.name:
