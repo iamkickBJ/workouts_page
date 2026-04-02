@@ -156,6 +156,7 @@ jobs:
 
       - name: Run sync Garmin script
         if: env.RUN_TYPE == 'garmin'
+        continue-on-error: true
         run: |
           echo "Attempting sync with stored secret..."
           python run_page/garmin_sync.py "$GARMIN_SECRET_RUNTIME" && exit 0
@@ -248,6 +249,11 @@ jobs:
 
       - name: Rebuild activities from existing GPX cache
         if: env.REBUILD_ACTIVITY_TYPES == 'true'
+        run: |
+          python run_page/gpx_sync.py
+
+      - name: Consolidate Absolute Truth stats from Metadata
+        if: env.RUN_TYPE == 'garmin' || env.RUN_TYPE == 'garmin_cn' || env.RUN_TYPE == 'only_gpx'
         run: |
           python run_page/gpx_sync.py
 
