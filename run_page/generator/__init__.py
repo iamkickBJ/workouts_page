@@ -98,6 +98,110 @@ class Generator:
             sys.stdout.flush()
 
         save_synced_data_file_list(synced_files)
+        self.session.commit()
+
+    def sync_from_garmin_meta(self, meta_file, data_dir, file_suffix="gpx"):
+        import json
+        from collections import namedtuple
+
+        if not os.path.exists(meta_file):
+            print(f"Meta file {meta_file} not found, fallback to directory sync.")
+            return self.sync_from_data_dir(data_dir, file_suffix=file_suffix)
+
+        with open(meta_file, "r") as f:
+            garmin_meta = json.load(f)
+
+        loader = track_loader.TrackLoader()
+        # track_map: run_id -> track_object
+        tracks = loader.load_tracks(data_dir, file_suffix=file_suffix)
+        track_map = {str(t.run_id): t for t in tracks}
+        print(f"Loaded {len(tracks)} GPX tracks for mapping.")
+
+        print(f"Processing {len(garmin_meta)} official Garmin activities...")
+        synced_files = []
+
+        # Mock object to satisfy update_or_create_activity
+        FakeMap = namedtuple("FakeMap", ["summary_polyline"])
+        FakeTrack = namedtuple(
+            "FakeTrack",
+            [
+                "id",
+                "name",
+                "type",
+                "distance",
+                "moving_time",
+                "elapsed_time",
+                "start_date",
+                "start_date_local",
+                "average_heartrate",
+                "average_speed",
+                "source",
+                "map",
+                "start_latlng",
+                "location_country",
+            ],
+        )
+
+        for run_id, meta in garmin_meta.items():
+            run_id_str = str(run_id)
+            distance = meta.get("distance", 0)
+            duration = meta.get("duration", 0)
+            name = meta.get("name", "Running")
+            start_date_str = meta.get("start_time", "")
+            
+            if not start_date_str:
+                print(f"Skipping activity {run_id} due to missing start_time.")
+                continue
+
+            # Ensure consistent date formatting for Generator.load
+            try:
+                dt = datetime.datetime.strptime(start_date_str, "%Y-%m-%d %H:%M:%S")
+                # start_date for DB usually expects ISO, start_date_local expects Y-m-d H:M:S
+                start_date_db = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+                start_date_local_db = dt.strftime("%Y-%m-%d %H:%M:%S")
+            except Exception as e:
+                print(f"Skipping activity {run_id} due to invalid time format: {start_date_str}")
+                continue
+
+            if run_id_str in track_map:
+                t = track_map[run_id_str]
+                # Force official data override
+                t.length = distance
+                t.moving_time = datetime.timedelta(seconds=duration)
+                # Override internal dates to match metadata truth
+                t.start_time = dt
+                t.start_time_local = dt
+                activity_data = t.to_namedtuple()
+                synced_files.extend(t.file_names)
+            else:
+                # Create a "virtual" activity for missing GPX
+                activity_data = FakeTrack(
+                    id=run_id,
+                    name=name,
+                    type="Run",
+                    distance=distance,
+                    moving_time=datetime.timedelta(seconds=duration),
+                    elapsed_time=datetime.timedelta(seconds=duration),
+                    start_date=start_date_db,
+                    start_date_local=start_date_local_db,
+                    average_heartrate=meta.get("average_heartrate", 0),
+                    average_speed=meta.get("average_speed", 0),
+                    source="garmin",
+                    map=FakeMap(summary_polyline=""),
+                    start_latlng=None,
+                    location_country="",
+                )
+            created = update_or_create_activity(self.session, activity_data)
+            if created:
+                sys.stdout.write("+")
+            else:
+                sys.stdout.write(".")
+            sys.stdout.flush()
+
+        self.session.commit()
+        if synced_files:
+            save_synced_data_file_list(synced_files)
+        print(f"\nSynced {len(garmin_meta)} activities (Absolute Garmin Truth).")
 
         self.session.commit()
 
@@ -143,9 +247,14 @@ class Generator:
             if self.only_run and activity.type != "Run":
                 continue
             # Determine running streak.
-            date = datetime.datetime.strptime(
-                activity.start_date_local, "%Y-%m-%d %H:%M:%S"
-            ).date()
+            try:
+                date = datetime.datetime.strptime(
+                    activity.start_date_local, "%Y-%m-%d %H:%M:%S"
+                ).date()
+            except Exception as e:
+                print(f"Skipping activity {activity.run_id} due to invalid start_date_local: {activity.start_date_local}")
+                continue
+
             if last_date is None:
                 streak = 1
             elif date == last_date:
@@ -175,10 +284,14 @@ class Generator:
         last_date = None
         for activity in activities:
             # Determine running streak.
-            # if activity.type == "Run" or activity.type == "Walk":
-            date = datetime.datetime.strptime(
-                activity.start_date_local, "%Y-%m-%d %H:%M:%S"
-            ).date()
+            # if activity.type == "Run" or activity.type == "Walk"
+            try:
+                date = datetime.datetime.strptime(
+                    activity.start_date_local, "%Y-%m-%d %H:%M:%S"
+                ).date()
+            except Exception as e:
+                print(f"Skipping activity {activity.run_id} due to invalid start_date_local: {activity.start_date_local}")
+                continue
             if last_date is None:
                 streak = 1
             elif date == last_date:

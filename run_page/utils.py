@@ -50,9 +50,12 @@ def to_date(ts):
     raise ValueError(f"cannot parse timestamp {ts} into date with fmts: {ts_fmts}")
 
 
-def make_activities_file(sql_file, data_dir, json_file, file_suffix="gpx"):
+def make_activities_file(sql_file, data_dir, json_file, garmin_meta_file=None, file_suffix="gpx"):
     generator = Generator(sql_file)
-    generator.sync_from_data_dir(data_dir, file_suffix=file_suffix)
+    if garmin_meta_file:
+        generator.sync_from_garmin_meta(garmin_meta_file, data_dir, file_suffix=file_suffix)
+    else:
+        generator.sync_from_data_dir(data_dir, file_suffix=file_suffix)
     activities_list = generator.load()
     with open(json_file, "w") as f:
         json.dump(activities_list, f, indent=0)

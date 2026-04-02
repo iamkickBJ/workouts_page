@@ -233,7 +233,7 @@ class Track:
         # determinate name
         if gpx.name:
             self.name = gpx.name
-        elif gpx.tracks and gpx.tracks[0].name:
+        elif gpx.tracks and len(gpx.tracks) > 0 and gpx.tracks[0].name:
             self.name = gpx.tracks[0].name
         else:
             self.name = self.type + " from " + self.source
