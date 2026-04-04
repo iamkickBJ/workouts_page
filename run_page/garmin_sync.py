@@ -59,6 +59,7 @@ class Garmin:
         Init module
         """
         self.cf_req = cloudscraper.create_scraper()
+        garth.client.sess = self.cf_req
         self.URL_DICT = (
             GARMIN_CN_URL_DICT
             if auth_domain and str(auth_domain).upper() == "CN"
