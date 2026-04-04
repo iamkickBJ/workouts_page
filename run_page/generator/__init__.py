@@ -145,8 +145,10 @@ class Generator:
         for run_id, meta in garmin_meta.items():
             run_id_int = int(run_id)
             distance = float(meta.get("distance", 0) or 0)
-            duration = int(meta.get("duration", 0) or 0)
-            duration_delta = datetime.timedelta(seconds=duration)
+            # Prioritize movingDuration (if it is not None/0)
+            duration = meta.get("movingDuration") or meta.get("duration") or 0
+            duration_int = int(float(duration))
+            duration_delta = datetime.timedelta(seconds=duration_int)
             name = meta.get("name", "Running")
             start_date_str = meta.get("startTimeGMT", "")
             start_date_local_str = meta.get("startTimeLocal", "")
@@ -192,7 +194,7 @@ class Generator:
                     moving_time=duration_delta,
                     elapsed_time=duration_delta,
                     average_heartrate=meta.get("average_heartrate", 0),
-                    average_speed=meta.get("average_speed", 0),
+                    average_speed=meta.get("average_speed") or (distance / duration_int if duration_int > 0 else 0),
                     start_date=start_date_db,
                     start_date_local=start_date_local_db,
                     start_latlng=None,

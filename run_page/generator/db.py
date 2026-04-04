@@ -63,7 +63,11 @@ class Activity(Base):
         out = {}
         for key in ACTIVITY_KEYS:
             attr = getattr(self, key)
-            if isinstance(attr, (datetime.timedelta, datetime.datetime)):
+            if isinstance(attr, datetime.timedelta):
+                # Round to whole seconds
+                attr = datetime.timedelta(seconds=int(attr.total_seconds()))
+                out[key] = str(attr)
+            elif isinstance(attr, datetime.datetime):
                 out[key] = str(attr)
             else:
                 out[key] = attr
