@@ -50,7 +50,7 @@ GARMIN_CN_URL_DICT = {
 }
 
 # set to True if you want to sync all-time activities
-GET_ALL = True
+GET_ALL = False
 
 
 class Garmin:
@@ -428,7 +428,7 @@ if __name__ == "__main__":
         # ⚠️ Restore Data accuracy: use make_activities_file instead of make_activities_file_only
         # This ensures all activities > 0.1km are included, avoiding restrictive mapping filters.
         from utils import make_activities_file
-        make_activities_file(SQL_FILE, folder, JSON_FILE, file_suffix=file_type)
+        make_activities_file(SQL_FILE, folder, JSON_FILE, garmin_meta_file=GARMIN_META_FILE, file_suffix=file_type)
     except GarminConnectAuthenticationError as err:
         print(str(err))
         sys.exit(1)

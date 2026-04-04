@@ -169,15 +169,17 @@ class Track:
             self.polylines.append(line)
             polyline_container.extend([[p[0], p[1]] for p in position_values])
             self.polyline_container = polyline_container
-            self.start_time_local, self.end_time_local = parse_datetime_to_local(
-                self.start_time, self.end_time, polyline_container[0]
-            )
             # get start point
             try:
+                self.start_time_local, self.end_time_local = parse_datetime_to_local(
+                    self.start_time, self.end_time, polyline_container[0]
+                )
                 self.start_latlng = start_point(*polyline_container[0])
             except:
-                pass
+                self.start_time_local, self.end_time_local = self.start_time, self.end_time
             self.polyline_str = polyline.encode(polyline_container)
+        else:
+            self.start_time_local, self.end_time_local = self.start_time, self.end_time
         self.moving_dict = {
             "distance": self.length,
             "moving_time": datetime.timedelta(seconds=moving_time),
@@ -268,12 +270,13 @@ class Track:
         # get start point
         try:
             self.start_latlng = start_point(*polyline_container[0])
+            self.start_time_local, self.end_time_local = parse_datetime_to_local(
+                self.start_time, self.end_time, polyline_container[0]
+            )
         except:
-            pass
-        self.start_time_local, self.end_time_local = parse_datetime_to_local(
-            self.start_time, self.end_time, polyline_container[0]
-        )
-        self.polyline_str = polyline.encode(polyline_container)
+            self.start_time_local, self.end_time_local = self.start_time, self.end_time
+        if polyline_container:
+            self.polyline_str = polyline.encode(polyline_container)
         self.average_heartrate = (
             sum(heart_rate_list) / len(heart_rate_list) if heart_rate_list else None
         )
@@ -359,10 +362,13 @@ class Track:
                     else message.avg_speed
                 )
 
-        self.start_time_local, self.end_time_local = parse_datetime_to_local(
-            self.start_time, self.end_time, self.polyline_container[0]
-        )
-        self.start_latlng = start_point(*self.polyline_container[0])
+        try:
+            self.start_time_local, self.end_time_local = parse_datetime_to_local(
+                self.start_time, self.end_time, self.polyline_container[0]
+            )
+            self.start_latlng = start_point(*self.polyline_container[0])
+        except:
+            self.start_time_local, self.end_time_local = self.start_time, self.end_time
         self.polylines.append(_polylines)
         self.polyline_str = polyline.encode(self.polyline_container)
 

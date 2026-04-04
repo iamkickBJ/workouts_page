@@ -7,7 +7,7 @@ try:
     import stravalib
 except Exception:
     stravalib = None
-from config import MAPPING_TYPE
+from config import MAPPING_TYPE, TYPE_DICT
 from gpxtrackposter import track_loader
 from sqlalchemy import func
 
@@ -131,65 +131,74 @@ class Generator:
                 "distance",
                 "moving_time",
                 "elapsed_time",
-                "start_date",
-                "start_date_local",
                 "average_heartrate",
                 "average_speed",
-                "source",
-                "map",
+                "start_date",
+                "start_date_local",
                 "start_latlng",
                 "location_country",
+                "map",
+                "source",
             ],
         )
 
         for run_id, meta in garmin_meta.items():
-            run_id_str = str(run_id)
-            distance = meta.get("distance", 0)
-            duration = meta.get("duration", 0)
+            run_id_int = int(run_id)
+            distance = float(meta.get("distance", 0) or 0)
+            duration = int(meta.get("duration", 0) or 0)
+            duration_delta = datetime.timedelta(seconds=duration)
             name = meta.get("name", "Running")
-            start_date_str = meta.get("start_time", "")
+            start_date_str = meta.get("startTimeGMT", "")
+            start_date_local_str = meta.get("startTimeLocal", "")
             
             if not start_date_str:
-                print(f"Skipping activity {run_id} due to missing start_time.")
+                print(f"Skipping activity {run_id} due to missing startTimeGMT.")
                 continue
 
             # Ensure consistent date formatting for Generator.load
             try:
                 dt = datetime.datetime.strptime(start_date_str, "%Y-%m-%d %H:%M:%S")
+                dt_local = datetime.datetime.strptime(start_date_local_str, "%Y-%m-%d %H:%M:%S") if start_date_local_str else dt
                 # start_date for DB usually expects ISO, start_date_local expects Y-m-d H:M:S
                 start_date_db = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-                start_date_local_db = dt.strftime("%Y-%m-%d %H:%M:%S")
+                start_date_local_db = dt_local.strftime("%Y-%m-%d %H:%M:%S")
             except Exception as e:
                 print(f"Skipping activity {run_id} due to invalid time format: {start_date_str}")
                 continue
 
-            if run_id_str in track_map:
-                t = track_map[run_id_str]
+            # Map official type to internally recognized types
+            meta_type = meta.get("type", "running")
+            activity_type = TYPE_DICT.get(meta_type, "Run")
+
+            if str(run_id) in track_map:
+                t = track_map[str(run_id)]
                 # Force official data override
                 t.length = distance
-                t.moving_time = datetime.timedelta(seconds=duration)
+                t.moving_time = duration_delta
                 # Override internal dates to match metadata truth
                 t.start_time = dt
-                t.start_time_local = dt
+                t.start_time_local = dt_local
+                # Ensure type is also updated to official mapping
+                t.activity_type = activity_type
                 activity_data = t.to_namedtuple()
                 synced_files.extend(t.file_names)
             else:
                 # Create a "virtual" activity for missing GPX
                 activity_data = FakeTrack(
-                    id=run_id,
+                    id=run_id_int,
                     name=name,
-                    type="Run",
+                    type=activity_type,
                     distance=distance,
-                    moving_time=datetime.timedelta(seconds=duration),
-                    elapsed_time=datetime.timedelta(seconds=duration),
-                    start_date=start_date_db,
-                    start_date_local=start_date_local_db,
+                    moving_time=duration_delta,
+                    elapsed_time=duration_delta,
                     average_heartrate=meta.get("average_heartrate", 0),
                     average_speed=meta.get("average_speed", 0),
-                    source="garmin",
-                    map=FakeMap(summary_polyline=""),
+                    start_date=start_date_db,
+                    start_date_local=start_date_local_db,
                     start_latlng=None,
                     location_country="",
+                    map=FakeMap(summary_polyline=""),
+                    source="garmin",
                 )
             created = update_or_create_activity(self.session, activity_data)
             if created:
