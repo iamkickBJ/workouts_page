@@ -289,6 +289,12 @@ class Track:
         activity_id, _ = os.path.splitext(file_name)
         if not activity_id:
             return
+        
+        try:
+            self.run_id = int(activity_id)
+        except ValueError:
+            pass
+
         garmin_meta = _load_garmin_meta_cache().get(activity_id)
         if not garmin_meta:
             return
@@ -417,10 +423,10 @@ class Track:
             "id": self.run_id,
             "name": self.name,
             "type": self.type,
-            "start_date": self.start_time.strftime("%Y-%m-%d %H:%M:%S"),
-            "end": self.end_time.strftime("%Y-%m-%d %H:%M:%S"),
-            "start_date_local": self.start_time_local.strftime("%Y-%m-%d %H:%M:%S"),
-            "end_local": self.end_time_local.strftime("%Y-%m-%d %H:%M:%S"),
+            "start_date": self.start_time.strftime("%Y-%m-%d %H:%M:%S") if self.start_time else "",
+            "end": self.end_time.strftime("%Y-%m-%d %H:%M:%S") if self.end_time else "",
+            "start_date_local": self.start_time_local.strftime("%Y-%m-%d %H:%M:%S") if self.start_time_local else "",
+            "end_local": self.end_time_local.strftime("%Y-%m-%d %H:%M:%S") if self.end_time_local else "",
             "length": self.length,
             "average_heartrate": int(self.average_heartrate)
             if self.average_heartrate

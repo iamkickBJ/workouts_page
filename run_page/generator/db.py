@@ -129,9 +129,11 @@ def update_or_create_activity(session, run_activity):
             activity.type = type
             activity.average_heartrate = run_activity.average_heartrate
             activity.average_speed = float(run_activity.average_speed)
-            activity.summary_polyline = (
+            new_polyline = (
                 run_activity.map and run_activity.map.summary_polyline or ""
             )
+            if new_polyline:
+                activity.summary_polyline = new_polyline
             activity.source = source
     except Exception as e:
         print(f"something wrong with {run_activity.id}")
