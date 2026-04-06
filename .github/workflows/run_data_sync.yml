@@ -129,6 +129,25 @@ jobs:
         run: |
           python run_page/codoon_sync.py ${{ secrets.CODOON_MOBILE }} ${{ secrets.CODOON_PASSWORD }}
 
+      - name: Install Cloudflare WARP
+        if: contains(env.RUN_TYPE, 'garmin')
+        run: |
+          curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+          sudo apt-get update && sudo apt-get install -y cloudflare-warp
+
+      - name: Connect Cloudflare WARP
+        if: contains(env.RUN_TYPE, 'garmin')
+        run: |
+          warp-cli --accept-tos registration new
+          warp-cli --accept-tos mode warp
+          warp-cli --accept-tos connect
+          sleep 10
+          echo "WARP status:"
+          warp-cli --accept-tos status
+          echo "IP info:"
+          curl -s https://cloudflare.com/cdn-cgi/trace | grep -E "ip|warp"
+
       # for garmin if you want generate `tcx` you can add --tcx command in the args.
       - name: Prepare Garmin secret
         if: env.RUN_TYPE == 'garmin'
@@ -273,6 +292,12 @@ jobs:
           git add .
           git commit -m 'Add new workouts and update official metadata' || echo "nothing to commit"
           git push || echo "nothing to push"
+
+      - name: Disconnect Cloudflare WARP
+        if: contains(env.RUN_TYPE, 'garmin')
+        continue-on-error: true
+        run: |
+          warp-cli --accept-tos disconnect || true
 
       - name: Set Output
         id: set_output
