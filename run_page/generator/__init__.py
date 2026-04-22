@@ -193,7 +193,7 @@ class Generator:
                     distance=distance,
                     moving_time=duration_delta,
                     elapsed_time=duration_delta,
-                    average_heartrate=meta.get("average_heartrate", 0),
+                    average_heartrate=meta.get("averageHR") or meta.get("average_heartrate") or 0,
                     average_speed=meta.get("average_speed") or (distance / duration_int if duration_int > 0 else 0),
                     start_date=start_date_db,
                     start_date_local=start_date_local_db,

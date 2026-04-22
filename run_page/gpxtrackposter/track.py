@@ -321,6 +321,12 @@ class Track:
         if activity_type:
             self.type = activity_type
 
+        # If GPX didn't have heart rate data, use Garmin metadata
+        if not self.average_heartrate:
+            meta_hr = garmin_meta.get("averageHR")
+            if meta_hr and float(meta_hr) > 0:
+                self.average_heartrate = float(meta_hr)
+
     def _load_fit_data(self, fit: FitFile):
         _polylines = []
         self.polyline_container = []

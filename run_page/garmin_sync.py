@@ -50,6 +50,7 @@ GARMIN_CN_URL_DICT = {
 }
 
 # set to True if you want to sync all-time activities
+# Can be overridden by --all CLI flag
 GET_ALL = False
 
 
@@ -265,6 +266,15 @@ def _extract_activity_meta(activity):
     if not activity_id:
         return None, None
     activity_type = activity.get("activityType", {}) or {}
+    # Extract average heart rate from Garmin API response
+    avg_hr = activity.get("averageHR")
+    if avg_hr is not None:
+        try:
+            avg_hr = float(avg_hr)
+            if avg_hr <= 0:
+                avg_hr = None
+        except (ValueError, TypeError):
+            avg_hr = None
     return activity_id, {
         "distance": activity.get("distance"),
         "movingDuration": activity.get("movingDuration"),
@@ -274,6 +284,7 @@ def _extract_activity_meta(activity):
         "type": activity_type.get("typeKey"),
         "startTimeLocal": activity.get("startTimeLocal"),
         "startTimeGMT": activity.get("startTimeGMT"),
+        "averageHR": avg_hr,
     }
 
 
@@ -290,6 +301,8 @@ async def get_activity_meta_map(client, start=0):
             meta_map[activity_id] = meta
 
     if GET_ALL:
+        # Add delay between paginated API calls to avoid 429
+        await asyncio.sleep(random.uniform(1.0, 2.0))
         meta_map.update(await get_activity_meta_map(client, start + limit))
     return meta_map
 
@@ -392,6 +405,12 @@ if __name__ == "__main__":
         help="to download personal documents or ebook",
     )
     parser.add_argument(
+        "--all",
+        dest="get_all",
+        action="store_true",
+        help="sync all-time activities (not just recent)",
+    )
+    parser.add_argument(
         "--summary-only",
         dest="summary_only",
         action="store_true",
@@ -404,6 +423,8 @@ if __name__ == "__main__":
     )
     file_type = options.download_file_type
     is_only_running = options.only_run
+    if options.get_all:
+        GET_ALL = True
     if secret_string is None:
         print("Missing argument nor valid configuration file")
         sys.exit(1)

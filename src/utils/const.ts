@@ -115,7 +115,6 @@ const RUN_TITLES = {
 const TYPE_TRANSLATE = {
   Run: RUN_TITLE,
   Ride: RIDE_TITLE,
-  VirtualRide: VIRTUAL_RIDE_TITLE, // 👈 这一行让虚拟骑行单独显示
   Hike: HIKE_TITLE,
   Swim: SWIM_TITLE,
   Rowing: ROWING_TITLE,

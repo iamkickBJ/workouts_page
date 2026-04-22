@@ -173,6 +173,22 @@ jobs:
           echo "::add-mask::$GARMIN_SECRET"
           echo "GARMIN_SECRET_RUNTIME=$GARMIN_SECRET" >> $GITHUB_ENV
 
+      # One-time: fetch ALL historical activity metadata to populate averageHR
+      # This only runs once (controlled by .hr_metadata_migrated flag file)
+      # Uses --all --summary-only to avoid downloading GPX/FIT files
+      - name: One-time HR metadata migration
+        if: env.RUN_TYPE == 'garmin'
+        continue-on-error: true
+        run: |
+          if [ -f ".hr_metadata_migrated" ]; then
+            echo "HR metadata migration already done. Skipping."
+          else
+            echo "Running one-time full metadata sync (summary-only, no file downloads)..."
+            python run_page/garmin_sync.py "$GARMIN_SECRET_RUNTIME" --all --summary-only && \
+              echo "done" > .hr_metadata_migrated && \
+              echo "HR metadata migration complete."
+          fi
+
       - name: Run sync Garmin script
         if: env.RUN_TYPE == 'garmin'
         continue-on-error: true

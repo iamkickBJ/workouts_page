@@ -38,8 +38,6 @@ const YearStat = ({ year, onClick }: { year: string, onClick: (_year: string) =>
   let heartRateNullCount = 0;
   const workoutsCounts: Record<string, [number, number, number]> = {
     Ride: [0, 0, 0],
-    VirtualRide: [0, 0, 0],
-    'Indoor Ride': [0, 0, 0],
   };
 
   runs.forEach((run) => {
@@ -70,7 +68,7 @@ const YearStat = ({ year, onClick }: { year: string, onClick: (_year: string) =>
     0
   );
 
-  const bikeTypes = ['Ride', 'VirtualRide', 'Indoor Ride'];
+  const bikeTypes = ['Ride'];
   const bikeTypeSet = new Set(bikeTypes);
   const bikeWorkouts = bikeTypes
     .filter((type) => workoutsCounts[type] !== undefined && workoutsCounts[type][0] > 0)
