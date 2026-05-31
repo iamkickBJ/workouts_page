@@ -115,6 +115,7 @@ const RUN_TITLES = {
 const TYPE_TRANSLATE = {
   Run: RUN_TITLE,
   Ride: RIDE_TITLE,
+  'Indoor Ride': INDOOR_RIDE_TITLE,
   Hike: HIKE_TITLE,
   Swim: SWIM_TITLE,
   Rowing: ROWING_TITLE,
