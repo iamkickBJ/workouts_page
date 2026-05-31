@@ -68,7 +68,7 @@ const YearStat = ({ year, onClick }: { year: string, onClick: (_year: string) =>
     0
   );
 
-  const bikeTypes = ['Ride'];
+  const bikeTypes = ['Ride', 'Indoor Ride'];
   const bikeTypeSet = new Set(bikeTypes);
   const bikeWorkouts = bikeTypes
     .filter((type) => workoutsCounts[type] !== undefined && workoutsCounts[type][0] > 0)
