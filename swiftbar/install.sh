@@ -36,12 +36,18 @@ defaults write com.ameba.SwiftBar PluginDirectory "$PLUGIN_DIR"
 # 防止 SwiftBar 自动把支持文件/备份设为可执行后当成插件加载
 defaults write com.ameba.SwiftBar MakePluginExecutable -bool false
 
+# 先退出 SwiftBar，避免部署过程中加载到中间状态
+killall SwiftBar 2>/dev/null || true
+
 # 旧插件备份到 ~/.swiftbar-backups（去掉执行权限——可执行备份留在插件目录会被 SwiftBar 当第二个插件）
 if [[ -f "$DEST" ]]; then
   BAK="$HOME/.swiftbar-backups/${PLUGIN}.$(date +%Y%m%d-%H%M%S).bak"
   cp "$DEST" "$BAK" && chmod a-x "$BAK"
   echo "==> 旧插件已备份: $BAK"
 fi
+
+# 清理早期 Python 版残留（v1，标题形如 "C -- · X 33%"）
+rm -f "$PLUGIN_DIR/codex_claude_quota.5m.py"
 
 # 部署（仓库内直接拷；curl|bash 场景从 GitHub 下载）
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || true)"
@@ -56,11 +62,16 @@ fi
 sed -i '' "1s|.*|#!${NODE_BIN}|" "$DEST"
 chmod +x "$DEST"
 
-# 插件目录顶层只允许主插件一个可执行文件
+# 插件目录顶层只保留主插件一个文件——SwiftBar 连普通支持文件都会建状态项，
+# 其余一律移到 ~/.swiftbar-backups/stray-*/（隐藏文件如 .claude_usage_cache.json 不受影响）
+STRAY_DIR="$HOME/.swiftbar-backups/stray-$(date +%Y%m%d-%H%M%S)"
 for f in "$PLUGIN_DIR"/*; do
-  if [[ -f "$f" && -x "$f" && "$(basename "$f")" != "$PLUGIN" ]]; then
-    chmod a-x "$f"
-    echo "==> 已移除多余可执行权限: $f"
+  base="$(basename "$f")"
+  if [[ -f "$f" && "$base" != "$PLUGIN" ]]; then
+    mkdir -p "$STRAY_DIR"
+    mv "$f" "$STRAY_DIR/$base"
+    chmod a-x "$STRAY_DIR/$base" 2>/dev/null || true
+    echo "==> 已移出插件目录: $base → $STRAY_DIR/"
   fi
 done
 
